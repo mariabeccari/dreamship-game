@@ -1,0 +1,2147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Dreamship — Adapted Comic Books</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Bangers&family=Nunito:wght@400;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#000a1f;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Nunito',sans-serif;overflow:hidden;touch-action:none;}
+#game-wrapper{position:relative;width:100%;max-width:480px;height:100svh;max-height:800px;overflow:hidden;}
+canvas{display:block;width:100%;height:100%;}
+
+/* ── SCREENS ── */
+.screen{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;text-align:center;background:linear-gradient(180deg,#000a1f 0%,#001040 60%,#000a1f 100%);z-index:10;}
+
+#screen-start{background:none;overflow:hidden;padding-bottom:60px;}
+#start-bg-img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;z-index:-2;
+  animation:bgKenBurns 24s ease-in-out infinite;
+  transform-origin:center center;
+}
+@keyframes bgKenBurns{
+  0%   { transform:scale(1.0); }
+  50%  { transform:scale(1.12); }
+  100% { transform:scale(1.0); }
+}
+#start-bg-overlay{
+  position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(180deg,rgba(0,10,31,0.32) 0%,rgba(0,16,64,0.28) 60%,rgba(0,10,31,0.4) 100%);
+}
+.screen.hidden{display:none;}
+.crystal-icon{font-size:52px;margin-bottom:10px;filter:drop-shadow(0 0 18px #ffaa00);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+.logo{font-family:'Bangers',cursive;font-size:clamp(34px,10vw,48px);letter-spacing:3px;color:#ffd700;text-shadow:0 0 30px #ffaa00,3px 3px 0 #5a3d00;line-height:1;margin-bottom:4px;}
+.logo-sub{font-family:'Bangers',cursive;font-size:clamp(15px,4vw,20px);letter-spacing:4px;color:#ffd700;text-shadow:2px 2px 0 #7a5800;margin-bottom:14px;}
+.story-text{font-size:clamp(12px,3.2vw,14px);color:#ffffff;line-height:1.5;max-width:340px;margin-bottom:10px;}
+.story-text strong{color:#ffd700;font-weight:800;}
+.story-gap{display:block;height:4px;}
+
+/* ── CHOOSERS ── */
+.chooser-label{font-family:'Bangers',cursive;font-size:17px;letter-spacing:2px;color:#ffd700;margin-bottom:8px;}
+
+.name-entry-block{margin-bottom:16px;display:flex;flex-direction:column;align-items:center;}
+#player-name-input{
+  font-family:'Nunito',sans-serif;font-size:17px;font-weight:700;
+  text-align:center;width:80%;max-width:280px;padding:10px 14px;
+  border-radius:14px;border:2px solid rgba(0,229,255,0.5);
+  background:rgba(10,20,40,0.6);color:#fff;margin-bottom:6px;
+  -webkit-tap-highlight-color:transparent;
+}
+#player-name-input::placeholder{color:rgba(255,255,255,0.45);}
+#player-name-input:focus{outline:none;border-color:#00e5ff;background:rgba(10,20,40,0.85);}
+.name-skip{
+  font-family:'Nunito',sans-serif;font-size:12px;color:rgba(255,255,255,0.75);
+  text-decoration:underline;cursor:pointer;margin-bottom:4px;
+  -webkit-tap-highlight-color:transparent;
+}
+.name-skip:active{color:#fff;}
+.name-current{
+  font-family:'Bangers',cursive;font-size:13px;color:#ffd700;
+  letter-spacing:1px;min-height:16px;
+}
+.chooser-row{display:flex;gap:8px;margin-bottom:14px;}
+.len-btn,.spd-btn{font-family:'Bangers',cursive;font-size:17px;letter-spacing:2px;border:2px solid #00cfff;border-radius:10px;padding:9px 16px;cursor:pointer;flex:1;transition:transform .1s,background .15s;-webkit-tap-highlight-color:transparent;color:#00e5ff;background:linear-gradient(135deg,#003a6e,#005a9e);}
+.len-btn small,.spd-btn small{display:block;font-family:'Nunito',sans-serif;font-size:11px;font-weight:700;margin-top:2px;}
+.len-btn.selected,.spd-btn.selected,.len-btn:active,.spd-btn:active{background:linear-gradient(135deg,#00cfff,#ffd700);color:#000a1f;border-color:#ffd700;transform:scale(1.05);}
+.spd-btn[data-speed="slow"].selected{background:linear-gradient(135deg,#00c853,#b2ff59);color:#003300;border-color:#00c853;}
+
+/* ── MAIN BTN ── */
+.btn{font-family:'Bangers',cursive;font-size:clamp(20px,6vw,26px);letter-spacing:3px;color:#000a1f;background:linear-gradient(135deg,#00e5ff 0%,#00cfff 50%,#ffd700 100%);border:none;border-radius:50px;padding:13px 36px;cursor:pointer;box-shadow:0 0 30px rgba(0,229,255,.5),0 4px 0 #006080;transition:transform .1s,box-shadow .1s;-webkit-tap-highlight-color:transparent;}
+.btn:active{transform:translateY(3px);box-shadow:0 0 20px rgba(0,229,255,.3),0 1px 0 #006080;}
+.how-to{margin-top:8px;font-size:clamp(10px,2.8vw,12px);color:#ffffff;line-height:1.5;}
+.how-to span{color:#ffd700;font-weight:700;}
+
+/* ── HUD ── */
+#hud{position:absolute;top:0;left:0;right:0;display:flex;justify-content:space-between;align-items:center;padding:10px 16px;z-index:5;pointer-events:none;}
+
+/* TEMP DEBUG PANEL — DELETE THIS RULE BEFORE FINAL RELEASE */
+#debug-spawn-panel{
+  display:none;
+  position:absolute; top:80px; left:6px; right:6px; z-index:30;
+  font-family:monospace; font-size:11px; color:#0f0;
+  background:rgba(0,0,0,0.92); padding:10px; border-radius:8px;
+  border:2px solid #0f0;
+  pointer-events:none; line-height:1.5;
+}
+#ingame-player-name{
+  position:absolute; bottom:30px; left:0; right:0;
+  text-align:center; z-index:6; pointer-events:none;
+  font-family:'Bangers',cursive; font-size:27px; letter-spacing:2px;
+  color:rgba(255,215,0,0.85); text-shadow:0 0 8px rgba(255,215,0,0.4);
+}
+#powerup-legend{
+  position:absolute;top:38px;left:0;right:0;
+  display:flex;justify-content:center;gap:14px;
+  z-index:5;pointer-events:none;
+}
+.pu-legend-item{
+  display:flex;align-items:center;gap:4px;
+  background:rgba(0,10,30,0.45);border-radius:14px;
+  padding:3px 8px 3px 4px;
+}
+.pu-legend-item img{width:18px;height:18px;display:block;}
+.pu-legend-item span{
+  font-family:'Nunito',sans-serif;font-size:9px;font-weight:700;
+  color:#ffffff;letter-spacing:0.3px;white-space:nowrap;
+}
+.hud-item{font-family:'Bangers',cursive;font-size:20px;letter-spacing:2px;color:#00e5ff;text-shadow:0 0 10px #00cfff;}
+.hud-label{font-size:9px;color:#5580aa;letter-spacing:1px;display:block;text-align:center;font-family:'Nunito',sans-serif;font-weight:700;}
+.lives-row{display:flex;gap:4px;}
+.life-dot{width:11px;height:11px;border-radius:50%;background:#ffd700;box-shadow:0 0 8px #ffd700;}
+.life-dot.lost{background:#333;box-shadow:none;}
+
+/* ── TIMER BAR ── */
+#timer-bar-wrap{position:absolute;bottom:0;left:0;right:0;height:5px;background:rgba(0,229,255,.1);z-index:5;}
+#timer-bar{height:100%;background:linear-gradient(90deg,#00cfff,#ffd700);width:100%;box-shadow:0 0 8px #00cfff;}
+
+/* ── TAP HINT ── */
+#tap-hint{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);font-size:10px;color:rgba(255,255,255,.85);letter-spacing:2px;font-family:'Nunito',sans-serif;font-weight:700;pointer-events:none;z-index:5;transition:opacity 1s;}
+#hard-mode-intro{
+  display:none;
+  position:absolute; top:0; left:0; right:0; bottom:0;
+  display:none; align-items:center; justify-content:center;
+  z-index:7; pointer-events:none;
+}
+#hard-mode-intro.show{display:flex;}
+#hard-mode-intro span{
+  font-family:'Bangers',cursive; font-size:clamp(28px,8vw,40px);
+  letter-spacing:2px; color:#fff;
+  text-shadow:0 0 16px rgba(255,80,80,0.9), 2px 2px 0 #7a0000;
+  text-align:center; padding:0 20px;
+}
+
+/* ── SOUND BTN ── */
+#sound-toggle{position:absolute;top:10px;right:16px;z-index:20;background:none;border:none;font-size:22px;cursor:pointer;opacity:.7;-webkit-tap-highlight-color:transparent;}
+
+/* ── WIDE EDGE BUTTONS (slow + medium) ── */
+#btn-left-wide,#btn-right-wide{
+  position:absolute;
+  bottom:22px;
+  width:76px;height:76px;
+  background:none;
+  border:none;
+  padding:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  z-index:8;
+  pointer-events:all;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:none;
+  user-select:none;
+  opacity:0.9;
+}
+#btn-left-wide img,#btn-right-wide img{width:100%;height:100%;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));}
+#btn-left-wide{left:8px;}
+#btn-right-wide{right:8px;}
+#btn-left-wide:active,#btn-right-wide:active,
+#btn-left-wide.pressed,#btn-right-wide.pressed{opacity:1;transform:scale(0.93);}
+
+/* ── DPAD + JOYSTICK (fast mode) ── */
+#fast-controls{position:absolute;bottom:18px;left:0;right:0;display:none;z-index:8;pointer-events:none;}
+#joystick-wrap{position:absolute;right:10px;bottom:0;width:105px;height:105px;pointer-events:all;touch-action:none;}
+#dpad{position:absolute;left:10px;bottom:0;pointer-events:all;display:flex;flex-direction:column;align-items:center;gap:4px;user-select:none;}
+#dpad.hidden-control{display:none;}
+#dpad-recall-btn{
+  display:none;
+  position:absolute; left:10px; bottom:18px;
+  padding:10px 16px;
+  background:rgba(0,180,220,0.25); border:2px solid rgba(0,229,255,0.6);
+  border-radius:24px; color:rgba(0,229,255,0.95);
+  font-family:'Bangers',cursive; font-size:13px; letter-spacing:1px;
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+  pointer-events:all; z-index:9;
+}
+#dpad-recall-btn:active{background:rgba(0,229,255,0.4);transform:scale(0.96);}
+.dpad-row{display:flex;gap:4px;align-items:center;}
+.dpad-btn{width:44px;height:44px;background:none;border:none;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .08s,opacity .08s;touch-action:none;user-select:none;opacity:0.9;}
+.dpad-btn img{width:100%;height:100%;display:block;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));}
+.dpad-btn:active,.dpad-btn.pressed{opacity:1;transform:scale(0.92);}
+.dpad-center{width:44px;height:44px;}
+
+#joystick-wrap.hidden-control{display:none;}
+#joy-recall-btn{
+  display:none;
+  position:absolute; right:10px; bottom:18px;
+  padding:10px 16px;
+  background:rgba(0,180,220,0.25); border:2px solid rgba(0,229,255,0.6);
+  border-radius:24px; color:rgba(0,229,255,0.95);
+  font-family:'Bangers',cursive; font-size:13px; letter-spacing:1px;
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+  pointer-events:all; z-index:9;
+}
+#joy-recall-btn:active{background:rgba(0,229,255,0.4);transform:scale(0.96);}
+#joystick-base{width:105px;height:105px;border-radius:50%;background:rgba(0,180,220,0.15);border:2px solid rgba(0,229,255,0.4);position:absolute;top:0;left:0;}
+#joystick-knob{width:42px;height:42px;border-radius:50%;background:radial-gradient(circle at 35% 35%,rgba(0,229,255,0.9),rgba(0,100,160,0.8));border:2px solid rgba(0,229,255,0.8);box-shadow:0 0 12px rgba(0,229,255,0.4);position:absolute;top:31px;left:31px;pointer-events:none;}
+
+/* ── HANDEDNESS BTN ── */
+#handedness-btn{position:absolute;top:52px;right:12px;font-family:'Bangers',cursive;font-size:12px;letter-spacing:1px;padding:5px 10px;border-radius:20px;background:rgba(0,229,255,0.12);border:1.5px solid rgba(0,229,255,0.4);color:rgba(0,229,255,0.8);cursor:pointer;z-index:9;display:none;-webkit-tap-highlight-color:transparent;}
+
+.img-btn-mini{position:absolute;top:62px;background:none;border:none;padding:0;cursor:pointer;z-index:25;-webkit-tap-highlight-color:transparent;transition:transform .1s;height:34px;display:none;}
+.img-btn-mini img{height:100%;width:auto;display:block;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.5));}
+
+#landing-readmore-btn,#landing-mycards-btn{
+  position:absolute;bottom:14px;background:none;border:none;padding:0;
+  cursor:pointer;z-index:15;-webkit-tap-highlight-color:transparent;
+  transition:transform .1s;width:104px;
+}
+#landing-readmore-btn{left:12px;}
+#landing-mycards-btn{right:12px;}
+#landing-readmore-btn img,#landing-mycards-btn img{width:100%;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.55));}
+#landing-readmore-btn:active,#landing-mycards-btn:active{transform:scale(0.93);}
+.img-btn-mini.show{display:block;}
+.img-btn-mini:active{transform:scale(0.92);}
+#quit-btn{left:10px;}
+#tryagain-btn{left:87px;}
+
+#quit-confirm-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,5,20,0.88);z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;}
+#quit-confirm-overlay.show{display:flex;}
+#tryagain-confirm-overlay{position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,5,20,0.88);z-index:50;display:none;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px;}
+#tryagain-confirm-overlay.show{display:flex;}
+#tryagain-confirm-overlay p{font-family:'Bangers',cursive;font-size:22px;color:#fff;margin:0 0 18px;letter-spacing:1px;}
+#ta-yes{font-family:'Bangers',cursive;font-size:15px;letter-spacing:1px;padding:10px 22px;border-radius:24px;cursor:pointer;border:2px solid #ffaa00;background:rgba(255,170,0,0.25);color:#ffe0a0;-webkit-tap-highlight-color:transparent;}
+#ta-yes:active{background:rgba(255,170,0,0.45);}
+#ta-no{font-family:'Bangers',cursive;font-size:15px;letter-spacing:1px;padding:10px 22px;border-radius:24px;cursor:pointer;border:2px solid #00e5ff;background:rgba(0,229,255,0.18);color:#c8f5ff;-webkit-tap-highlight-color:transparent;}
+#ta-no:active{background:rgba(0,229,255,0.35);}
+#quit-confirm-overlay p{font-family:'Bangers',cursive;font-size:22px;color:#fff;margin:0 0 18px;letter-spacing:1px;}
+#quit-confirm-overlay .qc-row{display:flex;gap:14px;}
+#quit-confirm-overlay button{font-family:'Bangers',cursive;font-size:15px;letter-spacing:1px;padding:10px 22px;border-radius:24px;cursor:pointer;border:2px solid;-webkit-tap-highlight-color:transparent;}
+#qc-yes{background:rgba(255,60,60,0.25);border-color:#ff6464;color:#ffd0d0;}
+#qc-yes:active{background:rgba(255,60,60,0.45);}
+#qc-no{background:rgba(0,229,255,0.18);border-color:#00e5ff;color:#c8f5ff;}
+#qc-no:active{background:rgba(0,229,255,0.35);}
+
+/* ── RESULT SCREENS ── */
+.result-icon{font-size:60px;margin-bottom:12px;}
+.result-title{font-family:'Bangers',cursive;font-size:clamp(28px,9vw,42px);letter-spacing:4px;margin-bottom:8px;}
+.win-title{color:#ffd700;text-shadow:0 0 30px #ffd700,3px 3px 0 #7a5800;}
+.lose-title{color:#ff4466;text-shadow:0 0 20px #ff4466,3px 3px 0 #660022;}
+.result-story{font-size:clamp(12px,3.2vw,14px);color:#b0d4ff;line-height:1.7;max-width:300px;margin-bottom:16px;}
+.result-story strong{color:#ffd700;font-weight:800;}
+.result-encourage{font-size:clamp(12px,3vw,14px);color:#a0c8e8;font-family:'Nunito',sans-serif;font-weight:600;margin:4px 0 16px;}
+.score-display{font-family:'Bangers',cursive;font-size:18px;color:#ffd700;letter-spacing:3px;margin-bottom:16px;}
+.btn-row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;}
+.btn-row-stacked{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.btn-secondary{font-family:'Bangers',cursive;font-size:18px;letter-spacing:2px;color:#00e5ff;background:transparent;border:2px solid #00e5ff;border-radius:50px;padding:9px 24px;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+#panel-reveal{background:white;border:5px solid #003366;border-radius:8px;padding:14px;max-width:290px;margin-bottom:14px;box-shadow:0 0 40px rgba(0,229,255,.4);}
+.panel-caption{font-family:'Nunito',sans-serif;font-size:12px;color:#003366;font-weight:800;line-height:1.5;font-style:italic;text-align:center;}
+.panel-speech{background:#003366;color:#ffd700;font-family:'Bangers',cursive;font-size:15px;letter-spacing:1px;border-radius:6px;padding:7px 10px;margin-top:8px;line-height:1.4;text-align:center;}
+.brand-footer{margin-top:8px;font-size:10px;color:#ffffff;letter-spacing:2px;font-weight:700;text-transform:uppercase;}
+.brand-issue{color:#ffd700;font-size:9px;letter-spacing:1.5px;display:inline-block;margin-top:3px;}
+.sr-only{position:absolute;width:1px;height:1px;clip:rect(0,0,0,0);overflow:hidden;}
+
+  /* ── CARD NOTIFICATION ── */
+  #card-notify{
+    position:absolute;top:60px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(135deg,#0d1f40,#1a2f5e);
+    border:2px solid #ffd700;border-radius:14px;
+    padding:10px 18px;z-index:15;
+    display:none;flex-direction:column;align-items:center;gap:4px;
+    box-shadow:0 0 30px rgba(255,215,0,.3);
+    animation:slideDown .3s ease;
+    min-width:200px;text-align:center;
+  }
+  #card-notify.show{display:flex;}
+  @keyframes slideDown{from{opacity:0;transform:translateX(-50%) translateY(-10px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+  .cn-label{font-size:10px;letter-spacing:2px;color:#ffd700;font-weight:700;}
+  .cn-art{font-size:32px;}
+  .cn-name{font-family:'Bangers',cursive;font-size:18px;letter-spacing:2px;color:#00e5ff;}
+  .cn-sub{font-size:10px;color:#5580aa;}
+
+  /* ── CARDS BTN on win screen ── */
+  .btn-cards-link{
+    font-family:'Bangers',cursive;font-size:16px;letter-spacing:2px;
+    color:#ffd700;background:rgba(255,215,0,.1);
+    border:1.5px solid rgba(255,215,0,.4);border-radius:30px;
+    padding:7px 18px;cursor:pointer;text-decoration:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+
+
+/* ── IMAGE BUTTONS ───────────────────────────────────────────────── */
+.img-btn {
+  background: none; border: none; padding: 0; cursor: pointer;
+  display: block; -webkit-tap-highlight-color: transparent;
+  transition: transform .1s, filter .1s;
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.5));
+}
+
+.new-card-dot{
+  position:absolute; top:-4px; right:-4px;
+  width:14px; height:14px; border-radius:50%;
+  background:#ff3333; border:2px solid #fff;
+  box-shadow:0 0 6px rgba(255,51,51,0.8);
+  animation:newCardPulse 1.6s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes newCardPulse{
+  0%,100% { transform:scale(1); }
+  50%     { transform:scale(1.15); }
+}
+.img-btn:active { transform: scale(0.94) translateY(2px); filter: drop-shadow(0 1px 3px rgba(0,0,0,0.4)); }
+.img-btn img { width: 100%; height: auto; display: block; }
+
+.spd-img-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; }
+.spd-img-wrap small {
+  font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 700;
+  color: #a0d4ff; text-align: center; letter-spacing: 0.5px;
+}
+.spd-img-wrap.selected small { color: #ffd700; }
+.spd-img-wrap .img-btn { width: 75%; transition: width .15s ease, filter .15s ease; }
+.spd-img-wrap .img-btn img { width: 100%; }
+.spd-img-wrap.selected .img-btn { width: 100%; filter: drop-shadow(0 0 8px rgba(255,215,0,0.8)); }
+
+.len-img-wrap { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 4px; }
+.len-img-wrap small {
+  font-family: 'Nunito', sans-serif; font-size: 10px; font-weight: 700;
+  color: #a0d4ff; text-align: center;
+}
+.len-img-wrap .img-btn { width: 75%; transition: width .15s ease, filter .15s ease; }
+.len-img-wrap .img-btn img { width: 100%; }
+.len-img-wrap.selected .img-btn { width: 100%; filter: drop-shadow(0 0 8px rgba(255,215,0,0.8)); }
+</style>
+</head>
+<body>
+<div id="game-wrapper">
+  <canvas id="gameCanvas" aria-hidden="true"></canvas>
+
+  <!-- HUD -->
+  <div id="hud" aria-live="polite">
+    <div><span class="hud-label">TIME</span><span class="hud-item" id="hud-time">0:00</span></div>
+    <div><span class="hud-label">LIVES</span><div class="lives-row" id="lives-row"><div class="life-dot" id="life-1"></div><div class="life-dot" id="life-2"></div><div class="life-dot" id="life-3"></div></div></div>
+    <div><span class="hud-label">DODGED</span><span class="hud-item" id="hud-dodged">0</span></div>
+  </div>
+  <div id="timer-bar-wrap"><div id="timer-bar"></div></div>
+  <div id="powerup-legend">
+    <div class="pu-legend-item"><img src="assets/PowerUps_Final/goldsunaward.01.png" alt=""><span>Shield</span></div>
+    <div class="pu-legend-item"><img src="assets/PowerUps_Final/powwerup.01.png" alt=""><span>+Time</span></div>
+    <div class="pu-legend-item"><img src="assets/Health_Final/Health.01.png" alt=""><span>+Life</span></div>
+  </div>
+  <div id="tap-hint">TAP LEFT / RIGHT TO DODGE</div>
+  <div id="hard-mode-intro"><span>AVOID THE ASTEROIDS!</span></div>
+  <div id="ingame-player-name"></div>
+  <!-- TEMP DEBUG PANEL — DELETE THIS DIV BEFORE FINAL RELEASE -->
+  <div id="debug-spawn-panel"></div>
+  <button id="sound-toggle" aria-label="Toggle sound">&#128266;</button>
+  <button id="handedness-btn">&#129332; LEFT HAND</button>
+  <button id="quit-btn" class="img-btn-mini"><img src="assets/buttons/quit_button.png" alt="Quit"></button>
+  <button id="tryagain-btn" class="img-btn-mini"><img src="assets/buttons/play_again.png" alt="Try Again"></button>
+  <div id="quit-confirm-overlay">
+    <p id="qc-message">Quit this game?</p>
+    <div class="qc-row">
+      <button id="qc-yes">YES, QUIT</button>
+      <button id="qc-no">KEEP PLAYING</button>
+    </div>
+  </div>
+  <div id="tryagain-confirm-overlay">
+    <p>Restart this game?</p>
+    <div class="qc-row">
+      <button id="ta-yes">YES, RESTART</button>
+      <button id="ta-no">KEEP PLAYING</button>
+    </div>
+  </div>
+
+  <!-- WIDE EDGE BUTTONS — slow + medium -->
+  <button id="btn-left-wide" aria-label="Move left"><img src="assets/buttons/left_button.png" alt="Left"></button>
+  <button id="btn-right-wide" aria-label="Move right"><img src="assets/buttons/right_button.png" alt="Right"></button>
+
+  <!-- FAST MODE CONTROLS -->
+  <button id="dpad-recall-btn" aria-label="Bring back direction pad">⊞ ARROWS</button>
+  <button id="joy-recall-btn" aria-label="Bring back joystick">⊙ JOYSTICK</button>
+  <div id="fast-controls">
+    <div id="dpad" role="group" aria-label="Direction pad">
+      <div class="dpad-row"><button class="dpad-btn" id="dpad-up"><img src="assets/buttons/up_button.png" alt="Up"></button></div>
+      <div class="dpad-row">
+        <button class="dpad-btn" id="dpad-left"><img src="assets/buttons/left_button.png" alt="Left"></button>
+        <div class="dpad-center"></div>
+        <button class="dpad-btn" id="dpad-right"><img src="assets/buttons/right_button.png" alt="Right"></button>
+      </div>
+      <div class="dpad-row"><button class="dpad-btn" id="dpad-down"><img src="assets/buttons/down_button.png" alt="Down"></button></div>
+    </div>
+    <div id="joystick-wrap" aria-label="Joystick">
+      <div id="joystick-base"></div>
+      <div id="joystick-knob"></div>
+    </div>
+  </div>
+
+  <!-- START SCREEN -->
+  <div class="screen" id="screen-start">
+    <img id="start-bg-img" src="assets/backgrounds/space_01.jpg" alt="">
+    <div id="start-bg-overlay"></div>
+    <div class="crystal-icon">&#128142;</div>
+    <div class="logo">DREAMSHIP</div>
+    <div class="logo-sub">ADAPTED COMIC BOOKS</div>
+    <p class="story-text"><strong>Evan</strong> found a glowing crystal — a piece of a meteor from the age of dinosaurs.<br><span class="story-gap"></span>It gave him the power to build anything he imagined.<br><span class="story-gap"></span>Tonight, it's your turn to dream big. Fly through the asteroid field!</p>
+    <div class="name-entry-block" id="name-entry-block">
+      <div class="chooser-label">YOUR PILOT NAME</div>
+      <input type="text" id="player-name-input" maxlength="16" placeholder="e.g. Player 1" autocomplete="off">
+      <div class="name-skip" id="name-skip-btn">Not interested · Just play game</div>
+      <div class="name-current" id="name-current-display"></div>
+    </div>
+    <div class="chooser-label">CHOOSE MISSION LENGTH</div>
+    <div class="chooser-row">
+      <div class="len-img-wrap" data-secs="60" id="len-60">
+  <button class="img-btn len-btn" data-secs="60"><img src="assets/buttons/1_min.png" alt="1 Minute"></button>
+</div>
+      <div class="len-img-wrap selected" data-secs="120" id="len-120">
+  <button class="img-btn len-btn" data-secs="120"><img src="assets/buttons/2_min.png" alt="2 Minutes"></button>
+</div>
+      <div class="len-img-wrap" data-secs="180" id="len-180">
+  <button class="img-btn len-btn" data-secs="180"><img src="assets/buttons/3_min.png" alt="3 Minutes"></button>
+</div>
+    </div>
+    <div class="chooser-label">CHOOSE SPEED</div>
+    <div class="chooser-row">
+      <div class="spd-img-wrap" data-speed="slow" id="spd-slow">
+  <button class="img-btn spd-btn" data-speed="slow"><img src="assets/buttons/level_1.png" alt="Level 1"></button>
+</div>
+      <div class="spd-img-wrap selected" data-speed="medium" id="spd-medium">
+  <button class="img-btn spd-btn" data-speed="medium"><img src="assets/buttons/level_2.png" alt="Level 2"></button>
+</div>
+      <div class="spd-img-wrap" data-speed="fast" id="spd-fast">
+  <button class="img-btn spd-btn" data-speed="fast"><img src="assets/buttons/level_3.png" alt="Level 3"></button>
+</div>
+    </div>
+    <button class="img-btn btn" id="btn-start" style="width:48%;margin:0 auto;"><img src="assets/buttons/launch.png" alt="Launch"></button>
+    <p class="how-to"><span>TAP LEFT</span> to move left &nbsp;&middot;&nbsp; <span>TAP RIGHT</span> to move right<br>You have <span>3 lives</span> — keep dreaming!</p>
+    <div class="brand-footer">adaptedcomicbooks.com</div>
+    <button id="landing-readmore-btn"><img src="assets/buttons/read_more.png" alt="Read More"></button>
+    <button id="landing-mycards-btn"><img src="assets/buttons/mycards_button.png" alt="My Cards"></button>
+  </div>
+
+  <!-- WIN SCREEN -->
+  <div class="screen hidden" id="screen-win">
+    <div class="result-icon">&#11088;</div>
+    <div class="result-title win-title" id="win-title">YOU MADE IT!</div>
+    <div id="panel-reveal">
+      <p class="panel-caption">Tonight you faced a great challenge,<br>and you won!</p>
+      <p class="panel-speech">Never stop dreaming big!</p>
+    </div>
+    <div class="score-display" id="win-score">DODGED: 0 ASTEROIDS</div>
+    <div class="btn-row-stacked">
+      <button class="img-btn btn" id="btn-play-again-win" style="width:56%;"><img src="assets/buttons/play_again.png" alt="Play Again"></button>
+      <button class="img-btn btn-secondary" id="btn-settings-win" style="width:42%;"><img src="assets/buttons/settings.png" alt="Settings"></button>
+    </div>
+    <div class="btn-row" style="margin-top:18px;">
+      <button class="img-btn btn-secondary" id="btn-read-win" style="width:27%;"><img src="assets/buttons/read_more.png" alt="Read More"></button>
+      <a href="dreamship_cards.html" id="mycards-link-win" class="img-btn" style="width:27%;display:inline-block;background:none;border:none;padding:0;position:relative;"><img src="assets/buttons/mycards_button.png" alt="My Cards" style="width:100%;display:block;"></a>
+    </div>
+    <div class="brand-footer">adaptedcomicbooks.com<br><span class="brand-issue">Nebulad &middot; Issue #1</span></div>
+  </div>
+
+  <!-- LOSE SCREEN -->
+  <div class="screen hidden" id="screen-lose">
+    <div class="result-icon">&#128165;</div>
+    <div class="result-title lose-title" id="lose-title">NICE TRY!</div>
+    <p class="result-encourage">Give it another try.</p>
+    <div class="score-display" id="lose-score">DODGED: 0 ASTEROIDS</div>
+    <div class="btn-row-stacked">
+      <button class="img-btn btn" id="btn-play-again-lose" style="width:56%;"><img src="assets/buttons/play_again.png" alt="Try Again"></button>
+      <button class="img-btn btn-secondary" id="btn-settings-lose" style="width:42%;"><img src="assets/buttons/settings.png" alt="Settings"></button>
+    </div>
+    <div class="btn-row" style="margin-top:18px;">
+      <button class="img-btn btn-secondary" id="btn-read-lose" style="width:27%;"><img src="assets/buttons/read_more.png" alt="Read More"></button>
+      <a href="dreamship_cards.html" id="mycards-link-lose" class="img-btn" style="width:27%;display:inline-block;background:none;border:none;padding:0;position:relative;"><img src="assets/buttons/mycards_button.png" alt="My Cards" style="width:100%;display:block;"></a>
+    </div>
+    <div class="brand-footer">adaptedcomicbooks.com<br><span class="brand-issue">Nebulad &middot; Issue #1</span></div>
+  </div>
+
+  <!-- CARD EARNED NOTIFICATION -->
+  <div id="card-notify">
+    <div class="cn-label">&#127183; CARD EARNED!</div>
+    <div class="cn-art" id="cn-art">&#9889;</div>
+    <div class="cn-name" id="cn-name">CARD NAME</div>
+    <div class="cn-sub" id="cn-sub">Added to your collection</div>
+  </div>
+
+  <div class="sr-only" aria-live="assertive" id="sr-announce"></div>
+</div>
+
+<script>
+// FIXED: moved to top of script - was defined too late, causing
+// "Cannot access K_NAME before initialization" every time initNameField()
+// ran during boot, silently breaking the player name system completely.
+const K_NAME = 'dreamship_player_name';
+const NAME_BLOCKLIST = [
+  'fuck','shit','ass','bitch','damn','cunt','dick','cock','pussy','whore',
+  'slut','fag','nigger','nigga','retard','rape','nazi','hitler','kill',
+  'die','sex','porn','penis','vagina','boob','tit','hoe','nude','naked',
+  'gay','queer','crap','piss','douche','bastard'
+];
+
+// ═══ BACKGROUND ══════════════════════════════════════════════════════
+function drawBackground(){
+  if(IMG_READY && IMG.bg){
+    ctx.drawImage(IMG.bg, 0, 0, W, H);
+  } else {
+    ctx.fillStyle='#000a1f';
+    ctx.fillRect(0,0,W,H);
+  }
+}
+
+// ═══ IMAGE PATHS (external files in assets/ folder) ════════════════
+const ASSET_PATH = 'assets/';
+// Image registry — populated after preload
+const IMG = {
+  bg: null,
+  ship: null, asteroids: [], bigExp: [], ltExp: [],
+  health: [], planets: [], trex: [],
+  puShield: null, puTime: null, puHeart: null, sun: null, basketball: null
+};
+let IMG_READY = false;
+
+// loadImg removed - using callback preloader
+
+
+function preloadAllImages(){
+  const P = ASSET_PATH;
+  // Build file list
+  const astFiles  = Array.from({length:24},(_,i)=>`${P}asteroid.${String(i+1).padStart(2,'0')}.png`);
+  const bigExpFiles = [1,2,3].map(i=>`${P}Effects_Final/BigExplosion.${String(i).padStart(2,'0')}.png`);
+  const ltExpFiles  = [1,2,3].map(i=>`${P}Effects_Final/LightExplosion.${String(i).padStart(2,'0')}.png`);
+  const healthFiles = [1,2].map(i=>`${P}Health_Final/Health.${String(i).padStart(2,'0')}.png`);
+  const planetFiles = [...[1,2,3,4,5,6].map(i=>`${P}Planets_Final/Planet.${String(i).padStart(2,'0')}.png`),
+                       `${P}Planets_Final/planet.07.png`];
+  const trexFiles   = [1,2,3].map(i=>`${P}Dinosaurs_Final/trex.${String(i).padStart(2,'0')}.png`);
+
+  const queue = [
+    [`${P}backgrounds/space_01.jpg`, r => IMG.bg = r],
+    [`${P}ship_01_transparent.png`, r => IMG.ship = r],
+    ...astFiles.map((src,i)    => [src, r => IMG.asteroids[i] = r]),
+    ...bigExpFiles.map((src,i) => [src, r => IMG.bigExp[i]    = r]),
+    ...ltExpFiles.map((src,i)  => [src, r => IMG.ltExp[i]     = r]),
+    ...healthFiles.map((src,i) => [src, r => IMG.health[i]    = r]),
+    ...planetFiles.map((src,i) => [src, r => IMG.planets[i]   = r]),
+    ...trexFiles.map((src,i)   => [src, r => IMG.trex[i]      = r]),
+    [`${P}PowerUps_Final/goldsunaward.01.png`, r => IMG.puShield   = r], // sun icon = shield power-up
+    [`${P}PowerUps_Final/powwerup.01.png`,     r => IMG.puTime     = r], // star icon = extra time power-up
+    [`${P}Health_Final/Health.01.png`,         r => IMG.puHeart    = r], // heart icon = extra life power-up
+    [`${P}Planets_Final/sun.01.png`,           r => IMG.sun        = r],
+    [`${P}Objects_Final/basketball.01.png`,    r => IMG.basketball = r],
+  ];
+  let loaded = 0;
+  const total = queue.length;
+  queue.forEach(([src, assign]) => {
+    const img = new Image();
+    img.onload  = () => { assign(img); loaded++; if(loaded>=total){ IMG_READY=true; console.log('IMG_READY! All',total,'images loaded'); }};
+    img.onerror = () => { assign(null); loaded++; console.warn('Image failed to load'); if(loaded>=total){ IMG_READY=true; }};
+    img.src = src;
+  });
+}
+
+// ═══ EXPLOSIONS ═══════════════════════════════════════════════════════
+let explosions=[];
+function spawnExplosion(x,y,big=false){
+  if(!IMG_READY) return;
+  const frames = big ? IMG.bigExp : IMG.ltExp;
+  explosions.push({x,y,frames,frame:0,maxFrames:frames.length,
+    size: big?90:55, life:frames.length*6, maxLife:frames.length*6});
+}
+function updateExplosions(){
+  if(!IMG_READY||!explosions.length) return;
+  for(let i=explosions.length-1;i>=0;i--){
+    const ex=explosions[i];
+    ex.life--;
+    ex.frame = Math.floor((1 - ex.life/ex.maxLife) * ex.maxFrames);
+    ex.frame = Math.min(ex.frame, ex.maxFrames-1);
+    const alpha = ex.life/ex.maxLife;
+    const img = ex.frames[ex.frame];
+    if(IMG_READY && img){
+      ctx.save(); ctx.globalAlpha=alpha;
+      try{ ctx.drawImage(img, ex.x-ex.size/2, ex.y-ex.size/2, ex.size, ex.size); }catch(e){}
+      ctx.restore();
+    }
+    if(ex.life<=0) explosions.splice(i,1);
+  }
+}
+
+// ═══ POWER-UPS ════════════════════════════════════════════════════════
+let powerUps=[];
+let shieldTimer=0;
+
+let slowPUToggle = 0;
+const PU_TYPES = ['shield','time','heart'];
+function puImg(type){
+  if(type==='shield') return IMG.puShield;
+  if(type==='time')   return IMG.puTime;
+  return IMG.puHeart;
+}
+function spawnPowerUp(){
+  let type;
+  if(speedMode==='slow'){
+    // Cycle through all 3 types in order so every type is guaranteed to
+    // appear even in a short 1-minute game (shield, time, heart, shield...)
+    type = PU_TYPES[slowPUToggle % 3];
+    slowPUToggle++;
+  } else {
+    // Roughly even three-way split, slightly favoring shield since it's
+    // the most situationally useful in fast-paced modes
+    const r = Math.random();
+    type = r<0.4 ? 'shield' : (r<0.7 ? 'time' : 'heart');
+  }
+  const sz=42;
+  powerUps.push({type, img:puImg(type),
+    x:sz+Math.random()*(W-sz*2), y:-sz, sz,
+    speed:1.2+Math.random()*0.6, rot:0, rotSpd:(Math.random()-.5)*.04});
+}
+
+function updatePowerUps(){
+  if(!IMG_READY||!powerUps.length) return;
+  for(let i=powerUps.length-1;i>=0;i--){
+    const p=powerUps[i];
+    p.y+=p.speed; p.rot+=p.rotSpd;
+    // Draw
+    if(IMG_READY && p.img){
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot);
+      try{ ctx.drawImage(p.img,-p.sz/2,-p.sz/2,p.sz,p.sz); }catch(e){}
+      ctx.restore();
+    }
+    // Collision
+    const dx=p.x-shipX, dy=p.y-shipY;
+    if(!p.consumed && Math.sqrt(dx*dx+dy*dy) < p.sz*0.65+CFG.shipR*0.85){
+      p.consumed = true;
+      if(p.type==='shield'){
+        shieldTimer=240;
+        inv=Math.max(inv,240);
+        sfxDodge();
+      } else if(p.type==='time'){
+        // Subtract from elapsed so timeLeft (= gameDuration - elapsed) increases.
+        // Never push elapsed below 0, and never give back more time than has
+        // actually passed (can't go past the original full duration).
+        elapsed = Math.max(0, elapsed - 8);
+        announce('+8 seconds!');
+        sfxDodge();
+      } else {
+        if(lives<CFG.lives){ lives++; updLives(); }
+        sfxDodge();
+      }
+      spawnExplosion(p.x,p.y,false);
+      powerUps.splice(i,1);
+      continue;
+    }
+    if(p.y>H+p.sz) powerUps.splice(i,1);
+  }
+}
+
+function drawShield(){
+  if(shieldTimer<=0||typeof ctx==='undefined') return;
+  shieldTimer--;
+  const alpha=Math.min(1,shieldTimer/60)*0.7;
+  ctx.save();
+  ctx.strokeStyle='#ffd700'; ctx.lineWidth=3;
+  ctx.globalAlpha=alpha;
+  // Pulsing ring
+  const pulse=1+0.1*Math.sin(frame*0.15);
+  ctx.beginPath(); ctx.arc(shipX,shipY,CFG.shipR*1.1*pulse,0,Math.PI*2);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// Power-up spawn timer
+let puTimer=0;
+function tickPowerUpSpawn(){
+  if(!IMG_READY || !gameStarted) return;
+  puTimer++;
+  // Slow mode: spawn every ~20s, guaranteed to alternate so both star and heart show up
+  // even in a short 1-minute game (roughly 3 spawns: star, heart, star)
+  const interval = speedMode==='fast'?620:speedMode==='medium'?1500:1200;
+  if(puTimer>=interval){ puTimer=0; spawnPowerUp(); }
+}
+
+// ── CONFIG ────────────────────────────────────────────────────────────
+const CFG = {
+  shipSpd:   2.8,
+  astSpd:    1.8,
+  astSpdMax: 6.0,
+  astInt:    85,
+  astIntMin: 28,
+  lives:     3,
+  iFrames:   90,
+  shipR:     22,
+  astSizes:  [26, 34, 44],
+  stars:     80,
+};
+// TEMP DEBUG — DELETE THIS LINE BEFORE FINAL RELEASE: slows hard mode to
+// 10% speed (90% reduction) specifically to make the asteroid pop-in bug
+// easy to see and screenshot in near-slow-motion. Set DEBUG_SLOWMO to false
+// (or just delete this override) to restore normal hard mode speed.
+const DEBUG_SLOWMO = false; // normal hard-mode speed restored for comparison testing
+const SPD = { slow:0.275, medium:0.5, fast: DEBUG_SLOWMO ? 0.05 : 1.0 };
+const JOYR = 32; // joystick radius (was 37, scaled down 15% with the smaller visual size)
+
+// ── STATE ─────────────────────────────────────────────────────────────
+let state='start', speedMode='medium', gameDuration=120;
+let gameStarted = false; // becomes true on first control input - timer and asteroid spawning wait for this
+let gameStartedAt = 0; // real elapsed-time clock (in our own dt units) since gameStarted became true
+function beginGameplay(){
+  if(gameStarted) return;
+  gameStarted = true;
+  gameStartedAt = 0;
+}
+let hardModeIntroDismissed = true;
+function dismissHardModeIntro(){
+  if(hardModeIntroDismissed) return;
+  hardModeIntroDismissed = true;
+  document.getElementById('hard-mode-intro').classList.remove('show');
+}
+let timeLeft=30, elapsed=0, dodged=0, lives=3, frame=0, inv=0, nextAst=CFG.astInt;
+let asteroids=[], particles=[], stars=[];
+let shipX=240, shipY=650, shipVX=0, shipVY=0;
+let shipGrabbed=false, shipGrabId=null, shipGrabX=0, shipGrabY=0;
+let keys={left:false,right:false,up:false,down:false};
+let joyActive=false, joyDX=0, joyDY=0;
+let leftHanded=false, animId=null, lastTS=0;
+
+// ── AUDIO ─────────────────────────────────────────────────────────────
+let ctx_a=null, engNode=null, engGain=null, sndOn=true;
+function initAudio(){
+  if(ctx_a) return;
+  try{ctx_a=new(window.AudioContext||window.webkitAudioContext)();}catch(e){sndOn=false;}
+}
+function startEng(){
+  if(!sndOn||!ctx_a) return; stopEng();
+  engNode=ctx_a.createOscillator(); engGain=ctx_a.createGain();
+  engNode.type='sawtooth'; engNode.frequency.value=55; engGain.gain.value=0.04;
+  const f=ctx_a.createBiquadFilter(); f.type='lowpass'; f.frequency.value=200;
+  engNode.connect(f); f.connect(engGain); engGain.connect(ctx_a.destination); engNode.start();
+}
+function stopEng(){if(engNode){try{engNode.stop();}catch(e){}engNode=null;}}
+function engPitch(on){
+  if(!sndOn||!ctx_a||!engNode) return;
+  engNode.frequency.setTargetAtTime(on?85:55,ctx_a.currentTime,0.05);
+  engGain.gain.setTargetAtTime(on?0.06:0.03,ctx_a.currentTime,0.05);
+}
+function sfxBang(){
+  if(!sndOn||!ctx_a) return;
+  const b=ctx_a.createBuffer(1,ctx_a.sampleRate*.3,ctx_a.sampleRate);
+  const d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,2);
+  const s=ctx_a.createBufferSource(),g=ctx_a.createGain();
+  g.gain.value=0.3; s.buffer=b; s.connect(g); g.connect(ctx_a.destination); s.start();
+}
+function sfxCheer(){
+  if(!sndOn||!ctx_a) return;
+  const now=ctx_a.currentTime, dur=2.5;
+  const b=ctx_a.createBuffer(1,ctx_a.sampleRate*dur,ctx_a.sampleRate);
+  const d=b.getChannelData(0);
+  for(let i=0;i<d.length;i++){
+    const e=i<ctx_a.sampleRate*.3?i/(ctx_a.sampleRate*.3):Math.pow(1-(i-ctx_a.sampleRate*.3)/(d.length-ctx_a.sampleRate*.3),.4);
+    d[i]=(Math.random()*2-1)*e;
+  }
+  const ns=ctx_a.createBufferSource(),nf=ctx_a.createBiquadFilter(),ng=ctx_a.createGain();
+  nf.type='bandpass'; nf.frequency.value=600; nf.Q.value=0.8; ng.gain.value=0.18;
+  ns.buffer=b; ns.connect(nf); nf.connect(ng); ng.connect(ctx_a.destination); ns.start(now);
+  [523,659,784,1047].forEach((f,i)=>{
+    const o=ctx_a.createOscillator(),g=ctx_a.createGain();
+    o.frequency.value=f; g.gain.setValueAtTime(0,now+i*.18);
+    g.gain.linearRampToValueAtTime(.15,now+i*.18+.05);
+    g.gain.exponentialRampToValueAtTime(.001,now+i*.18+.6);
+    o.connect(g); g.connect(ctx_a.destination); o.start(now+i*.18); o.stop(now+i*.18+.65);
+  });
+}
+function sfxDodge(){
+  if(!sndOn||!ctx_a) return;
+  const o=ctx_a.createOscillator(),g=ctx_a.createGain();
+  o.frequency.setValueAtTime(880,ctx_a.currentTime);
+  o.frequency.exponentialRampToValueAtTime(440,ctx_a.currentTime+.08);
+  g.gain.setValueAtTime(.08,ctx_a.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,ctx_a.currentTime+.12);
+  o.connect(g); g.connect(ctx_a.destination); o.start(); o.stop(ctx_a.currentTime+.15);
+}
+
+// ── CANVAS ────────────────────────────────────────────────────────────
+const canvas=document.getElementById('gameCanvas');
+const ctx=canvas.getContext('2d');
+let W, H;
+function resize(){
+  const w=document.getElementById('game-wrapper');
+  W=canvas.width=w.clientWidth; H=canvas.height=w.clientHeight;
+  if(state!=='playing'){shipX=W/2; shipY=H-140;}
+  makeStars();
+}
+window.addEventListener('resize',resize); resize();
+function makeStars(){
+  stars=[];
+  for(let i=0;i<CFG.stars;i++)
+    stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+.3,s:Math.random()*.6+.2,a:Math.random()*.7+.3});
+}
+
+// ── CONTROLS ─────────────────────────────────────────────────────────
+function showControls(){
+  const wl=document.getElementById('btn-left-wide');
+  const wr=document.getElementById('btn-right-wide');
+  const fc=document.getElementById('fast-controls');
+  const hb=document.getElementById('handedness-btn');
+
+  if(speedMode==='slow'||speedMode==='medium'){
+    wl.style.display='flex';
+    wr.style.display='flex';
+    fc.style.display='none';
+    hb.style.display='none';
+  } else {
+    wl.style.display='none';
+    wr.style.display='none';
+    fc.style.display='flex';
+    hb.style.display='block';
+    applyHandedness();
+  }
+}
+function hideControls(){
+  document.getElementById('btn-left-wide').style.display='none';
+  document.getElementById('btn-right-wide').style.display='none';
+  document.getElementById('fast-controls').style.display='none';
+  document.getElementById('handedness-btn').style.display='none';
+  document.getElementById('dpad-recall-btn').style.display='none';
+  document.getElementById('joy-recall-btn').style.display='none';
+}
+function applyHandedness(){
+  const fc=document.getElementById('fast-controls');
+  const hb=document.getElementById('handedness-btn');
+  fc.style.flexDirection=leftHanded?'row-reverse':'row';
+  hb.textContent=leftHanded?'✋ RIGHT HAND':'🤚 LEFT HAND';
+}
+
+// Pointer helpers for buttons
+function isNearShip(e){
+  // Check if a press lands within the ship's grab zone, even when the press
+  // landed on a D-pad/edge button rather than directly on the canvas.
+  // Without this, control buttons that visually overlap the ship's current
+  // position would always "win" and the ship could become ungrabbable.
+  const r = canvas.getBoundingClientRect();
+  const px = (e.touches?e.touches[0].clientX:e.clientX) - r.left;
+  const py = (e.touches?e.touches[0].clientY:e.clientY) - r.top;
+  const dx = px-shipX, dy = py-shipY;
+  return Math.sqrt(dx*dx+dy*dy) <= SHIP_GRAB_RADIUS;
+}
+function holdBtn(el, dir){
+  el.addEventListener('pointerdown',e=>{
+    if(state==='playing' && isNearShip(e)){
+      // Let the grab win instead — re-dispatch to canvas logic directly
+      e.preventDefault();
+      shipGrabbed = true; shipGrabId = e.pointerId;
+      const pt = canvasPoint(e); shipGrabX = pt.x; shipGrabY = pt.y;
+      if(canvas.setPointerCapture){ try{ canvas.setPointerCapture(e.pointerId); }catch(err){} }
+      hideMovementControls();
+      beginGameplay(); dismissHardModeIntro();
+      engPitch(true);
+      return;
+    }
+    e.preventDefault();keys[dir]=true;engPitch(true);el.classList.add('pressed');
+    beginGameplay(); dismissHardModeIntro();
+  },{passive:false});
+  el.addEventListener('pointerup',e=>{e.preventDefault();keys[dir]=false;el.classList.remove('pressed');checkPitch();},{passive:false});
+  el.addEventListener('pointerleave',()=>{keys[dir]=false;el.classList.remove('pressed');checkPitch();});
+}
+holdBtn(document.getElementById('btn-left-wide'),'left');
+holdBtn(document.getElementById('btn-right-wide'),'right');
+holdBtn(document.getElementById('dpad-left'),'left');
+holdBtn(document.getElementById('dpad-right'),'right');
+holdBtn(document.getElementById('dpad-up'),'up');
+holdBtn(document.getElementById('dpad-down'),'down');
+
+// ── DPAD / JOYSTICK TUCK-AWAY TABS ──────────────────────────────────────
+// Lets a player permanently tuck either control panel out of the way during
+// hard mode. Grabbing the ship ALWAYS hides both D-pad and joystick and shows
+// both recall buttons. Releasing the ship changes nothing - controls stay
+// hidden until the player manually taps a recall button. Tapping a recall
+// button shows that one control and hides its own recall button; the OTHER
+// control is untouched. Grabbing the ship again always re-hides both,
+// regardless of what was manually recalled - one consistent rule, no
+// exceptions.
+const dpadEl = document.getElementById('dpad');
+const dpadRecallBtn = document.getElementById('dpad-recall-btn');
+const joyEl = document.getElementById('joystick-wrap');
+const joyRecallBtn = document.getElementById('joy-recall-btn');
+
+function hideBothHardModeControls(){
+  dpadEl.classList.add('hidden-control');
+  joyEl.classList.add('hidden-control');
+  dpadRecallBtn.style.display = (speedMode==='fast') ? 'block' : 'none';
+  joyRecallBtn.style.display = (speedMode==='fast') ? 'block' : 'none';
+  keys.left=keys.right=keys.up=keys.down=false;
+  joyActive=false; joyDX=0; joyDY=0; jk.style.left='32px'; jk.style.top='32px';
+  checkPitch();
+}
+
+dpadRecallBtn.addEventListener('click', ()=>{
+  dpadEl.classList.remove('hidden-control');
+  dpadRecallBtn.style.display='none';
+  // Only one control visible at a time - recalling the D-pad hides the joystick
+  joyEl.classList.add('hidden-control');
+  joyRecallBtn.style.display = (speedMode==='fast') ? 'block' : 'none';
+  joyActive=false; joyDX=0; joyDY=0; jk.style.left='32px'; jk.style.top='32px';
+  checkPitch();
+});
+joyRecallBtn.addEventListener('click', ()=>{
+  joyEl.classList.remove('hidden-control');
+  joyRecallBtn.style.display='none';
+  // Only one control visible at a time - recalling the joystick hides the D-pad
+  dpadEl.classList.add('hidden-control');
+  dpadRecallBtn.style.display = (speedMode==='fast') ? 'block' : 'none';
+  keys.left=keys.right=keys.up=keys.down=false;
+  checkPitch();
+});
+
+function resetControlTabs(){
+  // Called at the start of every new game: both controls visible, no
+  // recall buttons shown, since nothing has been hidden by a grab yet.
+  dpadEl.classList.remove('hidden-control');
+  joyEl.classList.remove('hidden-control');
+  dpadRecallBtn.style.display='none';
+  joyRecallBtn.style.display='none';
+}
+
+function checkPitch(){engPitch(keys.left||keys.right||keys.up||keys.down||joyActive);}
+
+// Joystick
+const jw=document.getElementById('joystick-wrap');
+const jk=document.getElementById('joystick-knob');
+function joyPos(e){
+  const r=jw.getBoundingClientRect();
+  const cx=r.left+r.width/2, cy=r.top+r.height/2;
+  const px=e.touches?e.touches[0].clientX:e.clientX;
+  const py=e.touches?e.touches[0].clientY:e.clientY;
+  let dx=px-cx, dy=py-cy;
+  const d=Math.sqrt(dx*dx+dy*dy);
+  if(d>JOYR){dx=dx/d*JOYR; dy=dy/d*JOYR;}
+  return{dx,dy};
+}
+jw.addEventListener('pointerdown',e=>{
+  if(state==='playing' && isNearShip(e)){
+    // Same priority rule as the D-pad/edge buttons: if the touch lands on
+    // the ship's current position, the grab wins instead of the joystick.
+    // The joystick previously had NO such check — this was the actual
+    // remaining cause of "can't regrab the ship" in hard mode.
+    e.preventDefault();
+    shipGrabbed = true; shipGrabId = e.pointerId;
+    const pt = canvasPoint(e); shipGrabX = pt.x; shipGrabY = pt.y;
+    if(canvas.setPointerCapture){ try{ canvas.setPointerCapture(e.pointerId); }catch(err){} }
+    hideMovementControls();
+    beginGameplay(); dismissHardModeIntro();
+    engPitch(true);
+    return;
+  }
+  e.preventDefault(); joyActive=true;
+  if(jw.setPointerCapture) { try{ jw.setPointerCapture(e.pointerId); }catch(err){} }
+  const p=joyPos(e); joyDX=p.dx; joyDY=p.dy;
+  jk.style.left=(52.5+p.dx-21)+'px'; jk.style.top=(52.5+p.dy-21)+'px';
+  beginGameplay(); dismissHardModeIntro();
+  engPitch(true);
+},{passive:false});
+// Listen on the whole document for move/up so dragging past the visual
+// boundary keeps steering instead of triggering a "leave" reset.
+document.addEventListener('pointermove',e=>{
+  if(!joyActive) return; e.preventDefault();
+  const p=joyPos(e); joyDX=p.dx; joyDY=p.dy;
+  jk.style.left=(52.5+p.dx-21)+'px'; jk.style.top=(52.5+p.dy-21)+'px';
+},{passive:false});
+function joyRelease(){joyActive=false;joyDX=0;joyDY=0;jk.style.left='32px';jk.style.top='32px';checkPitch();}
+document.addEventListener('pointerup',joyRelease);
+document.addEventListener('pointercancel',joyRelease);
+
+// ── SHIP GRAB-DRAG (checked first — overrides tap zones if touch starts on ship) ──
+function canvasPoint(e){
+  const r = canvas.getBoundingClientRect();
+  const cx = (e.touches?e.touches[0].clientX:e.clientX) - r.left;
+  const cy = (e.touches?e.touches[0].clientY:e.clientY) - r.top;
+  return {x:cx, y:cy};
+}
+const SHIP_GRAB_RADIUS = CFG.shipR * 3.2; // increased from 2.0x - was too small relative to the D-pad's button footprint, creating a dead zone where the ship couldn't be grabbed if it sat underneath most of the D-pad area
+
+function hideMovementControls(){
+  // Easy/medium: fade the wide left/right buttons (existing behavior, unchanged).
+  document.getElementById('btn-left-wide').style.opacity='0';
+  document.getElementById('btn-right-wide').style.opacity='0';
+  // Hard mode: grabbing the ship ALWAYS hides both D-pad and joystick and
+  // shows both recall buttons, with no memory of prior manual recalls.
+  if(speedMode==='fast') hideBothHardModeControls();
+}
+function restoreMovementControls(){
+  if(state!=='playing') return;
+  document.getElementById('btn-left-wide').style.opacity='1';
+  document.getElementById('btn-right-wide').style.opacity='1';
+  // NOTE: releasing the ship intentionally does NOT restore hard mode's
+  // D-pad/joystick - they stay hidden until the player manually taps a
+  // recall button, per the agreed design.
+}
+
+canvas.addEventListener('pointerdown',e=>{
+  if(state!=='playing') return; e.preventDefault();
+  const pt = canvasPoint(e);
+  const dx = pt.x - shipX, dy = pt.y - shipY;
+  if(Math.sqrt(dx*dx+dy*dy) <= SHIP_GRAB_RADIUS){
+    // Grab the ship — overrides tap-zone behavior entirely for this touch
+    shipGrabbed = true;
+    shipGrabId = e.pointerId;
+    shipGrabX = pt.x; shipGrabY = pt.y;
+    if(canvas.setPointerCapture){ try{ canvas.setPointerCapture(e.pointerId); }catch(err){} }
+    hideMovementControls();
+    beginGameplay(); dismissHardModeIntro();
+    engPitch(true);
+    return;
+  }
+  // Fall through to existing press-and-hold tap-zone behavior
+  const px=e.touches?e.touches[0].clientX:e.clientX;
+  keys[px<window.innerWidth/2?'left':'right']=true; engPitch(true);
+  beginGameplay(); dismissHardModeIntro();
+},{passive:false});
+
+canvas.addEventListener('pointermove',e=>{
+  if(!shipGrabbed || e.pointerId!==shipGrabId) return;
+  e.preventDefault();
+  const pt = canvasPoint(e);
+  shipGrabX = pt.x; shipGrabY = pt.y;
+},{passive:false});
+
+function releaseShipGrab(){
+  if(shipGrabbed){
+    shipGrabbed = false; shipGrabId = null;
+    restoreMovementControls();
+    checkPitch();
+  }
+}
+canvas.addEventListener('pointerup',e=>{
+  if(shipGrabbed && e.pointerId===shipGrabId){ releaseShipGrab(); return; }
+  keys.left=false;keys.right=false;checkPitch();
+});
+canvas.addEventListener('pointerleave',()=>{
+  // Only clear tap-zone keys here — grab release is handled by pointerup/pointercancel
+  // (grab uses pointer capture, so pointerleave on canvas doesn't fire for it the same way)
+  if(!shipGrabbed){ keys.left=false;keys.right=false; }
+});
+canvas.addEventListener('pointercancel',e=>{
+  if(shipGrabbed && e.pointerId===shipGrabId){ releaseShipGrab(); }
+});
+
+// Keyboard
+window.addEventListener('keydown',e=>{
+  if(state!=='playing') return;
+  if(e.key==='ArrowLeft'||e.key==='a'){keys.left=true;engPitch(true);}
+  if(e.key==='ArrowRight'||e.key==='d'){keys.right=true;engPitch(true);}
+  if((e.key==='ArrowUp'||e.key==='w')&&speedMode==='fast'){keys.up=true;engPitch(true);}
+  if((e.key==='ArrowDown'||e.key==='s')&&speedMode==='fast'){keys.down=true;engPitch(true);}
+});
+window.addEventListener('keyup',e=>{
+  if(e.key==='ArrowLeft'||e.key==='a') keys.left=false;
+  if(e.key==='ArrowRight'||e.key==='d') keys.right=false;
+  if(e.key==='ArrowUp'||e.key==='w') keys.up=false;
+  if(e.key==='ArrowDown'||e.key==='s') keys.down=false;
+  checkPitch();
+});
+
+// Handedness
+document.getElementById('handedness-btn').addEventListener('click',()=>{leftHanded=!leftHanded;applyHandedness();});
+
+// Landing screen: Read More + My Cards (placeholder destinations — pages not yet built)
+document.getElementById('landing-readmore-btn').addEventListener('click', ()=>{
+  alert('Coming soon: game rules & info about Adapted Comic Books!');
+});
+document.getElementById('landing-mycards-btn').addEventListener('click', ()=>{
+  alert('Coming soon: view your collected cards here!');
+});
+
+// Quit button + confirm dialog
+document.getElementById('quit-btn').addEventListener('click', openQuitConfirm);
+document.getElementById('qc-yes').addEventListener('click', confirmQuit);
+document.getElementById('qc-no').addEventListener('click', ()=>closeQuitConfirm(true));
+
+document.getElementById('tryagain-btn').addEventListener('click', openTryAgainConfirm);
+document.getElementById('ta-yes').addEventListener('click', confirmTryAgain);
+document.getElementById('ta-no').addEventListener('click', ()=>closeTryAgainConfirm(true));
+
+// Sound
+const sBtn=document.getElementById('sound-toggle');
+sBtn.addEventListener('click',()=>{
+  sndOn=!sndOn; sBtn.textContent=sndOn?'🔊':'🔇';
+  if(!sndOn) stopEng(); else if(state==='playing') startEng();
+});
+
+// ── INIT GAME ─────────────────────────────────────────────────────────
+function initGame(){
+  document.getElementById('ingame-player-name').textContent = displayName();
+  gameStarted = false;
+  timeLeft=gameDuration; elapsed=0; dodged=0;
+  lives=CFG.lives; frame=0; inv=0; nextAst=CFG.astInt;
+  asteroids=[]; particles=[];
+  keys={left:false,right:false,up:false,down:false};
+  joyActive=false; joyDX=0; joyDY=0; shipVX=0; shipVY=0;
+  shipGrabbed=false; shipGrabId=null;
+  resetControlTabs();
+  // FIXED: opacity set by hideMovementControls() during a ship-grab persisted
+  // as an inline style across games. If a SECOND game started right after a
+  // grab/release cycle, controls could remain invisible (opacity:0) the whole
+  // time with nothing visible until the player happened to grab+release again.
+  document.getElementById('fast-controls').style.opacity='1';
+  document.getElementById('btn-left-wide').style.opacity='1';
+  document.getElementById('btn-right-wide').style.opacity='1';
+  jk.style.left='32px'; jk.style.top='32px';
+  shipX=W/2; shipY=H-140; lastTS=0;
+  cardGameStartTime=Date.now();
+  powerUps=[]; explosions=[]; shieldTimer=0; puTimer=0; slowPUToggle=0;
+  updLives(); updHUD();
+  document.getElementById('timer-bar').style.width='100%';
+  const th = document.getElementById('tap-hint');
+  const hmi = document.getElementById('hard-mode-intro');
+  hmi.classList.remove('show');
+  if(speedMode==='slow'){
+    th.style.opacity='0';
+  } else if(speedMode==='medium'){
+    th.textContent = 'TAP LEFT / RIGHT TO DODGE';
+    th.style.opacity='1';
+  } else {
+    // Hard mode: big intro message instead of the small text hint, dismissed
+    // by the first control input rather than a fixed timer.
+    th.style.opacity='0';
+    hmi.classList.add('show');
+    hardModeIntroDismissed = false;
+  }
+  showControls();
+}
+
+// ── HUD ───────────────────────────────────────────────────────────────
+function updHUD(){
+  const t=Math.max(0,timeLeft);
+  const m=Math.floor(t/60),s=Math.floor(t%60);
+  document.getElementById('hud-time').textContent=m+':'+(s<10?'0':'')+s;
+  document.getElementById('hud-dodged').textContent=dodged;
+  const pct=t/gameDuration;
+  document.getElementById('timer-bar').style.width=(pct*100)+'%';
+  document.getElementById('timer-bar').style.background=pct<.25?'linear-gradient(90deg,#ff4444,#ff8800)':'linear-gradient(90deg,#00cfff,#ffd700)';
+}
+function updLives(){for(let i=1;i<=3;i++) document.getElementById('life-'+i).classList.toggle('lost',i>lives);}
+function announce(m){const e=document.getElementById('sr-announce');e.textContent='';setTimeout(()=>e.textContent=m,50);}
+
+// ── DRAW HELPERS ──────────────────────────────────────────────────────
+function drawStars(){
+  stars.forEach(s=>{
+    s.y+=s.s; if(s.y>H){s.y=0;s.x=Math.random()*W;}
+    ctx.globalAlpha=s.a*(0.5+0.5*Math.sin(frame*.03+s.x));
+    ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+}
+function drawNebula(){
+  const g=ctx.createRadialGradient(W*.3,H*.4,0,W*.3,H*.4,W*.6);
+  g.addColorStop(0,'rgba(60,0,120,.08)'); g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+}
+function drawShip(x,y,flash){
+  ctx.save(); ctx.translate(x,y);
+  // Per feedback: no fade/pulse on hit at all - the existing particle burst
+  // at the moment of impact (spawnParticles, called elsewhere on collision)
+  // is the sole visual indicator now. Ship stays at full, constant opacity
+  // throughout the invincibility window, regardless of the flash flag.
+
+  // ── SHIP GLOW (behind the ship art) ──────────────────────────────
+  // Priority: shield glow (yellow) always wins over grab glow (blue).
+  let glowColor = null;
+  if(shieldTimer>0){
+    glowColor = 'rgba(255,215,0,1)'; // gold - shield active
+  } else if(shipGrabbed){
+    glowColor = 'rgba(255,90,200,1)'; // pink - actively grabbed (was green, then blue before that)
+  }
+
+  if(IMG_READY && IMG.ship){
+    const sz=CFG.shipR*3.8;
+    if(glowColor){
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = 18;
+    }
+    try{ ctx.drawImage(IMG.ship,-sz/2,-sz/2,sz,sz); }catch(e){}
+    ctx.shadowBlur = 0;
+    // ACCESSIBILITY FIX: shield (gameplay-critical invincibility) and grab
+    // (cosmetic input-mode indicator) were only distinguishable by glow color
+    // - a real problem for colorblind players, since shield state actually
+    // matters for survival. This icon gives a non-color cue specifically for
+    // shield, with no equivalent needed for grab since that's not safety info.
+    if(shieldTimer>0 && IMG_READY && IMG.puShield){
+      const iconSz = CFG.shipR*0.9;
+      try{ ctx.drawImage(IMG.puShield, sz*0.22, -sz*0.42, iconSz, iconSz); }catch(e){}
+    }
+  } else {
+    ctx.fillStyle='#00e5ff';
+    ctx.beginPath(); ctx.arc(0,0,CFG.shipR*.8,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha=1; ctx.restore();
+}
+function _drawShipOld(x,y,flash){
+  ctx.save(); ctx.translate(x,y);
+  // No fade/pulse on hit - matches the main drawShip behavior
+  for(let i=0;i<8;i++){
+    const ty=(i+1)*9,a=(1-i/8)*.35,tw=CFG.shipR*.7*(1-i/8);
+    ctx.globalAlpha=a; ctx.fillStyle=i%2===0?'#00e5ff':'#ffd700';
+    ctx.beginPath(); ctx.ellipse(0,ty,tw,tw*.4,0,0,Math.PI*2); ctx.fill();
+  }
+  ctx.globalAlpha=1;
+  const s=CFG.shipR;
+  ctx.shadowBlur=18; ctx.shadowColor='#00cfff'; ctx.fillStyle='#00cfff';
+  ctx.beginPath(); ctx.ellipse(0,s*.5,s*.25,s*.15,0,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+  ctx.fillStyle='#e8f4ff';
+  ctx.beginPath(); ctx.moveTo(0,-s); ctx.bezierCurveTo(s*.5,-s*.3,s*.6,s*.3,s*.2,s*.5); ctx.lineTo(-s*.2,s*.5); ctx.bezierCurveTo(-s*.6,s*.3,-s*.5,-s*.3,0,-s); ctx.fill();
+  ctx.fillStyle='#00a8cc';
+  ctx.beginPath(); ctx.moveTo(0,-s*.9); ctx.bezierCurveTo(s*.2,-s*.4,s*.25,s*.1,0,s*.35); ctx.bezierCurveTo(-s*.25,s*.1,-s*.2,-s*.4,0,-s*.9); ctx.fill();
+  ctx.shadowBlur=12; ctx.shadowColor='#ffd700';
+  const cg=ctx.createRadialGradient(0,-s*.3,0,0,-s*.3,s*.22);
+  cg.addColorStop(0,'#ffe066'); cg.addColorStop(.5,'#ffd700'); cg.addColorStop(1,'#ffaa00');
+  ctx.fillStyle=cg; ctx.beginPath(); ctx.arc(0,-s*.3,s*.22,0,Math.PI*2); ctx.fill(); ctx.shadowBlur=0;
+  ctx.fillStyle='#003d66';
+  ctx.beginPath(); ctx.moveTo(-s*.15,s*.1); ctx.lineTo(-s*.9,s*.55); ctx.lineTo(-s*.5,s*.6); ctx.lineTo(-s*.15,s*.45); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(s*.15,s*.1); ctx.lineTo(s*.9,s*.55); ctx.lineTo(s*.5,s*.6); ctx.lineTo(s*.15,s*.45); ctx.closePath(); ctx.fill();
+  ctx.globalAlpha=1; ctx.restore();
+}
+function makePts(r,n=8){
+  const p=[];
+  for(let i=0;i<n;i++){const a=(i/n)*Math.PI*2;p.push({x:Math.cos(a)*r*(.7+Math.random()*.5),y:Math.sin(a)*r*(.7+Math.random()*.5)});}
+  return p;
+}
+function drawAst(a){
+  // TEMP DEBUG: track each asteroid's true age in frames since spawn
+  if(typeof DEBUG_AGE_LABELS !== 'undefined' && DEBUG_AGE_LABELS){
+    if(a.__dbgAge===undefined) a.__dbgAge=0;
+    a.__dbgAge++;
+  }
+  const pool = (a.objType==='planet') ? IMG.planets : IMG.asteroids;
+  const img = pool.length>0 ? pool[a.imgIdx % pool.length] : null;
+  if(IMG_READY && img){
+    ctx.save(); ctx.translate(a.x,a.y); ctx.rotate(a.rot);
+    const sz = (a.objType==='planet') ? a.r*2.9 : a.r*2.6; // planets render slightly larger, feel more substantial
+    try{
+      if(img.complete && img.naturalWidth===0){
+        // Image element exists and "finished loading" but produced no actual
+        // pixel data - this is the classic silent-failure state. The old
+        // try/catch swallowed this completely, so the asteroid's position
+        // kept updating normally every frame while never actually being
+        // drawn - exactly matching "appears already 60+ frames old."
+        if(typeof DEBUG_AGE_LABELS !== 'undefined' && DEBUG_AGE_LABELS && a.__dbgAge%30===0){
+          console.warn('Asteroid image broken (naturalWidth=0):', img.src, 'age:', a.__dbgAge);
+        }
+      } else {
+        ctx.drawImage(img,-sz/2,-sz/2,sz,sz);
+      }
+    }catch(e){
+      if(typeof DEBUG_AGE_LABELS !== 'undefined' && DEBUG_AGE_LABELS){
+        console.warn('drawImage threw:', e, 'age:', a.__dbgAge);
+      }
+    }
+    ctx.restore();
+    // TEMP DEBUG: draw the age label AFTER restore, so it's not rotated with the sprite
+    if(typeof DEBUG_AGE_LABELS !== 'undefined' && DEBUG_AGE_LABELS){
+      ctx.save();
+      ctx.fillStyle = '#0f0'; ctx.font = 'bold 14px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(a.__dbgAge, a.x, a.y - a.r - 6);
+      ctx.fillStyle = '#000'; ctx.font = '10px monospace';
+      ctx.fillText('('+Math.round(a.x)+','+Math.round(a.y)+')', a.x, a.y + a.r + 14);
+      ctx.restore();
+    }
+    return;
+  }
+  _drawAstOld(a);
+}
+function _drawAstOld(a){
+  ctx.save(); ctx.translate(a.x,a.y); ctx.rotate(a.rot);
+  ctx.shadowBlur=12; ctx.shadowColor=a.blue?'#0044ff':'#ff6600';
+  ctx.fillStyle=a.blue?'#1a2a6e':'#4a3020';
+  ctx.beginPath(); ctx.moveTo(a.pts[0].x,a.pts[0].y);
+  for(let i=1;i<a.pts.length;i++) ctx.lineTo(a.pts[i].x,a.pts[i].y);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle=a.blue?'#2244aa':'#7a5030';
+  ctx.beginPath(); ctx.moveTo(a.pts[0].x*.7,a.pts[0].y*.7);
+  for(let i=1;i<a.pts.length;i++) ctx.lineTo(a.pts[i].x*.7,a.pts[i].y*.7);
+  ctx.closePath(); ctx.fill();
+  ctx.shadowBlur=0; ctx.restore();
+}
+
+// ── SPAWN ─────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════
+// ═══ TEMP DEBUG TOOL — DELETE THIS ENTIRE BLOCK BEFORE FINAL RELEASE ═══
+// Auto-freezes the game the instant any asteroid's rendered position jumps
+// by a suspiciously large amount in a single frame, and shows exactly which
+// one and by how much. No more hunting through a noisy scrolling log.
+// ═══════════════════════════════════════════════════════════════════════
+const DEBUG_FREEZE_ON_JUMP = false;
+const DEBUG_AGE_LABELS = false; // disabled - debugging complete, these were left on accidentally
+const DEBUG_UNLIMITED_LIVES = false; // normal lives restored to test if pop-in is density-related
+const DEBUG_JUMP_THRESHOLD = 25; // pixels per frame — bigger than any normal movement should be
+let debugFrozen = false;
+function debugCheckJump(a, prevX, prevY){
+  if(!DEBUG_FREEZE_ON_JUMP || debugFrozen) return;
+  // FIXED — another false-positive source: planets are DESIGNED to sweep
+  // nearly the full screen width in hard mode (97% of half-width, only 1.5-2
+  // cycles total). At the steepest part of that sine wave, the frame-to-frame
+  // delta can legitimately exceed any reasonable threshold -- that's the
+  // intended wide zig-zag, not a bug. Confirmed visually that planets look
+  // correct, so excluding them from this specific detector entirely.
+  if(a.objType==='planet') return;
+  // Skip the very first frame of an object's life - prevX/prevY were captured
+  // from its own brand-new spawn position, so any large spawn-time offset
+  // (off-screen spawns are often hundreds of px away) would otherwise look
+  // like a false-positive jump that never actually happened during real play.
+  if(a.__dbgFirstFrame === undefined){ a.__dbgFirstFrame = true; return; }
+  const dx = Math.abs(a.x - prevX), dy = Math.abs(a.y - prevY);
+  if(dx > DEBUG_JUMP_THRESHOLD || dy > DEBUG_JUMP_THRESHOLD){
+    debugFrozen = true;
+    state = 'debug-frozen';
+    const panel = document.getElementById('debug-spawn-panel');
+    panel.style.display='block';
+    panel.innerHTML =
+      '<b style="color:#ff0">FROZE ON BIG JUMP</b><br>' +
+      'type: ' + (a.objType||'asteroid') + '<br>' +
+      'jumped from (' + Math.round(prevX) + ',' + Math.round(prevY) + ')' +
+      ' to (' + Math.round(a.x) + ',' + Math.round(a.y) + ')<br>' +
+      'delta x:' + Math.round(dx) + ' y:' + Math.round(dy) + '<br>' +
+      'r:' + a.r + ' frame:' + frame + '<br>' +
+      '<span style="color:#0f0">Take your screenshot now. Tap anywhere to resume.</span>';
+  }
+}
+function debugResume(){
+  if(!debugFrozen) return;
+  debugFrozen = false; state='playing'; 
+  document.getElementById('debug-spawn-panel').style.display='none';
+}
+// FIXED: was {once:true}, so if a SECOND freeze happened before the first
+// tap-to-resume was used, the listener was already consumed and gone --
+// leaving no way to ever resume again. Now a single permanent listener
+// on the whole document checks debugFrozen each time, so it always works
+// no matter how many freezes have happened.
+document.addEventListener('pointerdown', debugResume);
+// ═══ END TEMP DEBUG SETUP ═══════════════════════════════════════════════
+
+function spawnAst(){
+  const r=CFG.astSizes[Math.floor(Math.random()*3)];
+  const prog=elapsed/gameDuration;
+  const sm=SPD[speedMode];
+  const boost=speedMode==='fast'?1+prog*1.4:1;
+  const spd=(CFG.astSpd+prog*(CFG.astSpdMax-CFG.astSpd))*sm*boost;
+  const x=r+Math.random()*(W-r*2);
+
+  // 18% chance to spawn a planet/moon instead of a regular asteroid (all modes)
+  const DEBUG_DISABLE_PLANETS = false; // re-enabled - all asteroid trajectories confirmed working, ready for planets to be added back in
+  const isPlanet = !DEBUG_DISABLE_PLANETS && IMG.planets.length>0 && Math.random()<0.24; // increased 18% -> 24% per testing feedback, all other planet behavior unchanged
+  const imgIdx = isPlanet
+    ? Math.floor(Math.random()*IMG.planets.length)
+    : Math.floor(Math.random()*IMG.asteroids.length);
+
+  const renderMult = isPlanet ? 2.9 : 2.6; // matches drawAst's actual sprite scale
+  // Buffer increased substantially — at late-game hard-mode speeds (up to ~14px/frame
+  // with the fast-mode boost), the previous buffer only guaranteed a few frames of
+  // travel before becoming visible, which could look like a sudden "pop" rather than
+  // a smooth entrance, especially on fast diagonal/horizontal trajectories.
+  const spawnOffset = r * renderMult * 0.55 + 40;
+  const a={x,baseX:x,y:-spawnOffset,r,pts:makePts(r),blue:Math.random()<.2,imgIdx,objType:isPlanet?'planet':'asteroid',
+    rot:0,rotSpd:0,wobOff:Math.random()*Math.PI*2,wobAmp:0,wobFreq:0.03+Math.random()*0.03,
+    wob2Off:Math.random()*Math.PI*2,wob2Amp:0,
+    zigOff:Math.random()*Math.PI*2,zigAmp:0,zigFreq:0.02+Math.random()*0.015,
+    vx:0,vy:spd,mass:r*r,spd,_age:0};
+
+  if(isPlanet){
+    a.baseX = x; // store the original spawn X — zig-zag will oscillate AROUND this, not drift from it
+    a.rotSpd = (Math.random()-.5)*.02; // slow gentle rotation, they're celestial bodies not tumbling rocks
+    // FIXED: previously "spd * 0.8" inherited the FULL asteroid ramp (including
+    // the fast-mode 1+prog*1.4 boost), just scaled down by a flat 20% — so planets
+    // still sped up just as aggressively as asteroids, proportionally. Now planets
+    // get their own much flatter progression, independent of asteroid speed scaling.
+    const planetBase = CFG.astSpd * 0.425; // halved again per testing feedback — genuinely 50% slower now
+    const planetRamp = CFG.astSpd * 0.2; // ramp also halved to match
+    a.vy = (planetBase + prog * planetRamp) * sm;
+    if(speedMode==='slow'){
+      // Easy mode: keep the original gentle zig-zag
+      a.zigAmp = 1.6 + Math.random()*1.2;
+      a.zigFreq = 0.02 + Math.random()*0.015;
+    } else if(speedMode==='medium'){
+      // Medium: noticeable but smooth zig-zag — fewer cycles since medium's
+      // fall speed is much slower, so the same cycle count would look like flicker
+      const halfWidth = (W - r*2) / 2;
+      a.zigAmp = halfWidth * (0.60 + Math.random()*0.15); // roughly doubled — now the math is correct (absolute position, not accumulating) this is safe to widen
+      const fallFrames = H / Math.max(a.vy, 0.5);
+      const cycles = 1.2 + Math.random()*0.4; // 1.2-1.6 cycles — smooth, trackable motion
+      a.zigFreq = (cycles * 2 * Math.PI) / fallFrames;
+    } else {
+      // Hard: extreme full-width zig-zag — sweeps edge to edge
+      // 3-4 complete swings during the fall, asymmetric (3 one way, 4 the other)
+      const halfWidth = (W - r*2) / 2;
+      a.zigAmp = halfWidth * (0.97 + Math.random()*0.03);
+      // FIXED: baseX was randomized across the full screen width at spawn,
+      // so a planet spawning near one edge would barely move on that side —
+      // only planets spawning near center actually showed a true edge-to-edge
+      // sweep. Force baseX to screen-center specifically for hard mode planets
+      // so the full sweep is consistent every single time, not spawn-luck dependent.
+      a.baseX = W / 2;
+      a.x = a.baseX; // also correct the initial render position to match
+      const fallFrames = H / Math.max(a.vy, 0.5);
+      // Reduced from 3-4 cycles to 1.5-2 — at full edge-to-edge amplitude, even
+      // a "slower" frequency can still feel fast since the planet covers the
+      // whole screen width on every single swing. Fewer cycles over the same
+      // fall time means each swing takes meaningfully longer to complete.
+      const cycles = 1.5 + Math.random()*0.5;
+      a.zigFreq = (cycles * 2 * Math.PI) / fallFrames;
+    }
+  }
+
+  if(speedMode==='medium' && !isPlanet){a.rotSpd=(Math.random()-.5)*.03;a.wobAmp=1.4;}
+  const USE_VERIFIED_TRAJECTORIES = true; // renamed from DEBUG_FORCE_STRAIGHT_DOWN - this branch now contains all 4 fully-tested, working trajectories (straight-down, diagonal, bottom-to-top, side-entry). The OLD unverified code lives in the else branch below and should never run.
+if(speedMode==='fast' && !isPlanet){
+    a.rotSpd=(Math.random()-.5)*.12;
+    a.wobAmp=1.4+Math.random()*1.4;
+    a.wob2Amp=0.6+Math.random()*0.9;
+    if(USE_VERIFIED_TRAJECTORIES){
+      // FULL TEST: straight-down + diagonal + bottom-to-top + side-entry.
+      // All four trajectories present. Bottom-to-top already confirmed
+      // working correctly (gravity-exempt fix verified). Side-entry now
+      // uses the CORRECTED margin formula (r*2.1, verified ~30% clearance
+      // against the a.r*3 cleanup threshold for every size) instead of the
+      // old render-size-based formula that had near-zero or negative margin.
+      const traj4Off = r * 2.1; // verified safe margin (confirmed earlier) - the actual bug was the missing baseX update below, not this distance
+      const traj4Test = Math.random();
+      if(traj4Test < 0.25){
+        a.vx = (Math.random()-.5) * 2.8;
+        a.vy = spd * (0.85 + Math.random() * 0.5);
+      } else if(traj4Test < 0.5){
+        const dir = Math.random()<0.5 ? 1 : -1;
+        a.vx = dir * spd * (0.6 + Math.random() * 0.5);
+        a.vy = spd * (0.7 + Math.random() * 0.4);
+      } else if(traj4Test < 0.75){
+        a.x = r + Math.random()*(W-r*2);
+        a.y = H + a.r*1.4; // verified safe margin against a.y > H+a.r*2 cleanup
+        a.vx = (Math.random()-.5) * 2.0;
+        a.vy = -spd * (0.6 + Math.random() * 0.4); // negative = moving upward
+        a.isRising = true; // marks this asteroid so gravity doesn't pull it back down
+      } else {
+        // ACTUAL ROOT CAUSE FOUND: a.x was set correctly off-screen here, but
+        // a.baseX (set at the top of the function to a random ON-SCREEN
+        // position, for the default top-spawn case) was NEVER updated to
+        // match. Since rendering uses "a.x = a.baseX + wobble" EVERY FRAME
+        // in the update loop, this off-screen a.x got overwritten on the very
+        // next frame by the stale, random, on-screen baseX -- meaning the
+        // asteroid was never actually off-screen at all, even briefly. It
+        // rendered at a random on-screen position from the start. This is
+        // why it always looked like it spawned "from different parts of the
+        // game area" no matter how the distance or speed was tuned.
+        const fromLeft = Math.random()<0.5;
+        a.x = fromLeft ? -traj4Off : W+traj4Off;
+        a.baseX = a.x; // THE FIX
+        a.y = Math.random() * H * 0.7;
+        a.vx = fromLeft ? spd*(0.8+Math.random()*0.6) : -spd*(0.8+Math.random()*0.6);
+        a.vy = spd * (0.3 + Math.random() * 0.4);
+      }
+    } else {
+    const traj2Off = r * renderMult * 0.55 + 40;
+    const trajRoll = Math.random();
+    if(trajRoll < 0.40){
+      // Straight-ish down with lateral drift (most common) — uses default top spawn
+      a.vx = (Math.random()-.5) * 2.8;
+      a.vy = spd * (0.85 + Math.random() * 0.5);
+    } else if(trajRoll < 0.65){
+      // Strong diagonal — top-left to bottom-right or vice versa
+      const dir = Math.random()<0.5 ? 1 : -1;
+      a.vx = dir * spd * (0.6 + Math.random() * 0.5);
+      a.vy = spd * (0.7 + Math.random() * 0.4);
+    } else if(trajRoll < 0.85){
+      // Near-horizontal — enters from left or right edge, travels mostly across
+      const fromLeft = Math.random()<0.5;
+      a.x = fromLeft ? -traj2Off : W+traj2Off;
+      a.y = Math.random() * H * 0.7;
+      a.vx = fromLeft ? spd*(0.8+Math.random()*0.6) : -spd*(0.8+Math.random()*0.6);
+      a.vy = spd * (0.3 + Math.random() * 0.4);
+    } else {
+      // FIXED — ACTUAL ROOT CAUSE FOUND: this trajectory spawns at H+traj2Off,
+      // but the off-screen cleanup check removes anything where a.y > H+a.r*2.
+      // traj2Off was smaller than a.r*2 for most sizes, meaning a freshly spawned
+      // bottom-to-top asteroid could satisfy the "gone" condition on its OWN FIRST
+      // FRAME, before ever moving once -- getting deleted instantly, invisibly.
+      // This trajectory was added in the same round the pop-in bug was first
+      // reported, and was never isolated/tested on its own until now. Spawning
+      // well clear of the cleanup threshold (a.r*3, matching the other off-screen
+      // spawns) fixes this properly.
+      a.x = r + Math.random()*(W-r*2);
+      a.y = H + a.r*3;
+      a.vx = (Math.random()-.5) * 2.0;
+      a.vy = -spd * (0.6 + Math.random() * 0.4); // negative = moving upward
+    }
+    } // close USE_VERIFIED_TRAJECTORIES else block (old unverified code, never runs)
+  }
+  // FIXED: prevent the actual root cause of the "toaster launch" bug rather than
+// just managing its aftermath. Check if this spawn position overlaps any
+// existing asteroid closely enough to trigger a violent collision response,
+// and if so, nudge it further along its own off-screen axis until clear.
+// This stops the overlap from ever happening, instead of creating it and
+// then trying to recover gracefully afterward.
+let nudges = 0;
+while(nudges < 8){
+  let overlapping = false;
+  for(const other of asteroids){
+    const ddx=other.x-a.x, ddy=other.y-a.y;
+    const ddist=Math.sqrt(ddx*ddx+ddy*ddy);
+    if(ddist < (a.r+other.r)*1.3){ overlapping = true; break; }
+  }
+  if(!overlapping) break;
+  // Push further along whichever axis is currently off-screen, since that's
+  // always safe to extend without creating a new visible-position problem.
+  if(a.y < 0){ a.y -= 30; }
+  else if(a.y > H){ a.y += 30; }
+  else if(a.x < 0){ a.x -= 30; }
+  else if(a.x > W){ a.x += 30; }
+  else { a.y -= 30; } // fallback for top-spawns mid-roll
+  if(a.baseX !== undefined) a.baseX = a.x;
+  nudges++;
+}
+asteroids.push(a);
+}
+
+// ── COLLISIONS ────────────────────────────────────────────────────────
+function resolveAstCols(){
+  for(let i=0;i<asteroids.length;i++){
+    for(let j=i+1;j<asteroids.length;j++){
+      const a=asteroids[i],b=asteroids[j];
+      // FIXED: a brand-new asteroid spawns BEFORE this function runs each frame,
+      // meaning it could immediately overlap an existing asteroid and get forcibly
+      // shoved to a new position by collision resolution on its very first frame --
+      // before it had ever been drawn even once. The result: it appears to "pop in"
+      // already mid-collision, far from its true off-screen spawn point, exactly
+      // matching "spawns right next to one, they hit and separate." Skip collision
+      // checks entirely for either asteroid's first frame of existence.
+      // FIXED v2: skipping only frame 0 just delayed the violent push to frame 1 --
+      // the asteroid was still deeply overlapping (only one frame of separation
+      // time had passed), so the SAME large "ov" correction fired one frame later,
+      // looking like it launched out of nowhere ("toaster" effect). Extending the
+      // grace period to 15 frames gives genuinely enough time for a freshly-spawned
+      // asteroid to either naturally separate via normal movement, or for collision
+      // to apply a much smaller, gentler correction since less overlap remains by then.
+      if(a._age<15 || b._age<15) continue;
+      const dx=b.x-a.x,dy=b.y-a.y,dist=Math.sqrt(dx*dx+dy*dy),min=a.r+b.r;
+      if(dist<min&&dist>0){
+        const nx=dx/dist,ny=dy/dist;
+        const dvx=b.vx-a.vx,dvy=b.vy-a.vy,dot=dvx*nx+dvy*ny;
+        if(dot>0) continue;
+        const restitution=0.85;
+        const imp=-(1+restitution)*dot/(1/a.mass+1/b.mass);
+        a.vx-=(imp/a.mass)*nx; a.vy-=(imp/a.mass)*ny;
+        b.vx+=(imp/b.mass)*nx; b.vy+=(imp/b.mass)*ny;
+        const ov=(min-dist)/2;
+        a.x-=nx*ov;a.y-=ny*ov;b.x+=nx*ov;b.y+=ny*ov;
+        spawnParticles((a.x+b.x)/2,(a.y+b.y)/2,'#ff8800',5);
+      }
+    }
+  }
+}
+function spawnParticles(x,y,col,n=10){
+  for(let i=0;i<n;i++){
+    const a=Math.random()*Math.PI*2,s=Math.random()*3+1;
+    particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:Math.random()*4+2,alpha:1,col,life:40+Math.random()*20});
+  }
+}
+function hitShip(a){
+  const dx=a.x-shipX,dy=a.y-shipY;
+  return Math.sqrt(dx*dx+dy*dy)<(a.r*.7+CFG.shipR*.85);
+}
+
+// ── SCREENS ───────────────────────────────────────────────────────────
+function showScreen(id){
+  ['screen-start','screen-win','screen-lose'].forEach(s=>document.getElementById(s).classList.add('hidden'));
+  if(id) document.getElementById(id).classList.remove('hidden');
+  hideControls();
+  // Quit / Try Again mini buttons only show during actual gameplay (id===null means playing)
+  const showMini = (id===null);
+  document.getElementById('quit-btn').classList.toggle('show', showMini);
+  document.getElementById('tryagain-btn').classList.toggle('show', showMini);
+}
+// ── QUIT GAME ─────────────────────────────────────────────────────────
+let prevState=null;
+function openQuitConfirm(){
+  if(state!=='playing') return;
+  prevState=state; state='paused';
+  document.getElementById('quit-confirm-overlay').classList.add('show');
+}
+function closeQuitConfirm(resume){
+  document.getElementById('quit-confirm-overlay').classList.remove('show');
+  if(resume){ state=prevState||'playing'; }
+}
+function confirmQuit(){
+  document.getElementById('quit-confirm-overlay').classList.remove('show');
+  stopEng();
+  cancelAnimationFrame(animId);
+  state='idle';
+  powerUps=[]; explosions=[]; shieldTimer=0; puTimer=0;
+  showScreen('screen-start');
+}
+
+// ── MID-GAME TRY AGAIN ──────────────────────────────────────────────
+function openTryAgainConfirm(){
+  if(state!=='playing') return;
+  prevState=state; state='paused';
+  document.getElementById('tryagain-confirm-overlay').classList.add('show');
+}
+function closeTryAgainConfirm(resume){
+  document.getElementById('tryagain-confirm-overlay').classList.remove('show');
+  if(resume){ state=prevState||'playing'; }
+}
+function confirmTryAgain(){
+  document.getElementById('tryagain-confirm-overlay').classList.remove('show');
+  stopEng();
+  cancelAnimationFrame(animId);
+  powerUps=[]; explosions=[]; shieldTimer=0; puTimer=0;
+  startGame(); // same duration + speed settings, instant restart
+}
+
+const WIN_PHRASES = ['YOU MADE IT!','BIG WINNER!','ROCK STAR!','WAY TO GO!','CHAMPION!'];
+function doWin(){
+  state='win'; stopEng(); cancelAnimationFrame(animId); sfxCheer();
+  document.getElementById('win-title').textContent = WIN_PHRASES[Math.floor(Math.random()*WIN_PHRASES.length)];
+  document.getElementById('win-score').textContent=displayName()+' DODGED: '+dodged+' ASTEROID'+(dodged!==1?'S':'');
+  showScreen('screen-win'); announce('You made it! Dodged '+dodged+' asteroids.'); setTimeout(updateCardBadges, 50);
+  // Card system
+  const dur = cardGameStartTime ? (Date.now()-cardGameStartTime)/1000 : gameDuration;
+  recordGameComplete(speedMode, dur);
+  tryEarnCard(speedMode, dur);
+}
+const LOSE_PHRASES = ['NICE TRY!','GREAT TRY!','FANTASTIC!',"DON'T GIVE UP!"];
+function doLose(){
+  state='lose'; stopEng(); cancelAnimationFrame(animId);
+  document.getElementById('lose-title').textContent = LOSE_PHRASES[Math.floor(Math.random()*LOSE_PHRASES.length)];
+  document.getElementById('lose-score').textContent=displayName()+' DODGED: '+dodged+' ASTEROID'+(dodged!==1?'S':'');
+  showScreen('screen-lose'); announce('Game over! Dodged '+dodged+' asteroids. Try again!'); setTimeout(updateCardBadges, 50);
+  // Record stats but no card — must complete game to earn cards
+  const dur = cardGameStartTime ? (Date.now()-cardGameStartTime)/1000 : elapsed;
+  recordGameComplete(speedMode, dur);
+}
+
+// ── GAME LOOP ─────────────────────────────────────────────────────────
+function loop(ts){
+  animId=requestAnimationFrame(loop);
+  const dt=lastTS?Math.min((ts-lastTS)/1000,.1):0; lastTS=ts;
+  // FIXED — major debug-tool self-inflicted bug: frame++ was happening even
+  // while debug-frozen, since requestAnimationFrame keeps firing regardless
+  // of game state. That meant frame kept climbing during a pause, and the
+  // moment you resumed, planets (whose position is a pure function of frame
+  // via Math.sin(frame*zigFreq)) would jump to wherever that sine wave landed
+  // at the new, much-larger frame value -- a fake "bug" created entirely by
+  // pausing to look at the debug panel, not a real gameplay issue.
+  if(state!=='debug-frozen') frame++;
+  drawBackground();
+  drawStars();
+  if(state!=='playing'){drawShip(shipX,shipY,false);return;}
+
+  if(frame===180) document.getElementById('tap-hint').style.opacity='0';
+
+  if(gameStarted){
+    gameStartedAt += dt;
+    if(gameStartedAt > 3) elapsed += dt; // 3-second buffer before the countdown actually starts
+  }
+  timeLeft=Math.max(0,gameDuration-elapsed); updHUD();
+
+  // ── MOVE SHIP ──────────────────────────────────────────────────────
+  const mg=CFG.shipR;
+  if(shipGrabbed){
+    // Finger/cursor IS the ship's position — no lag, direct 1:1 tracking.
+    // Horizontal-only in slow/medium (matches their existing control freedom),
+    // full freedom in fast mode.
+    shipX = Math.max(mg, Math.min(W-mg, shipGrabX));
+    if(speedMode==='fast'){
+      shipY = Math.max(H*.12, Math.min(H-140, shipGrabY)); // upper bound raised (was H*.25) to give back vertical range lost when the lower bound moved up to clear the D-pad/joystick
+    }
+    engPitch(true);
+  } else if(speedMode==='fast'){
+    const maxV=3.6;
+    shipVX=0; shipVY=0;
+    if(keys.left) shipVX-=maxV; if(keys.right) shipVX+=maxV;
+    if(keys.up)   shipVY-=maxV; if(keys.down)  shipVY+=maxV;
+    if(joyActive){shipVX=joyDX/JOYR*maxV; shipVY=joyDY/JOYR*maxV;}
+    const vel=Math.sqrt(shipVX*shipVX+shipVY*shipVY);
+    if(vel>maxV){shipVX=shipVX/vel*maxV;shipVY=shipVY/vel*maxV;}
+    shipX+=shipVX; shipY+=shipVY;
+    shipX=Math.max(mg,Math.min(W-mg,shipX));
+    shipY=Math.max(H*.12,Math.min(H-140,shipY)); // upper bound raised (was H*.25), matches grab-drag movement bound for consistency
+    engPitch(vel>0.5||joyActive);
+  } else {
+    const sp=CFG.shipSpd*(speedMode==='slow'?.5:1);
+    if(keys.left) shipX=Math.max(mg,shipX-sp);
+    if(keys.right) shipX=Math.min(W-mg,shipX+sp);
+    engPitch(keys.left||keys.right);
+  }
+
+  // ── SPAWN ──────────────────────────────────────────────────────────
+  if(gameStarted){
+  nextAst--;
+  if(nextAst<=0){
+    spawnAst();
+    const prog=elapsed/gameDuration;
+
+    let interval;
+    if(speedMode==='slow'){
+      // Slow: steady, gentle rate
+      interval = (CFG.astInt - prog*20) * 3.2;
+    } else if(speedMode==='medium'){
+      // Medium: mild ramp, no pacing drama
+      interval = (CFG.astInt - prog*35) * 1.5;
+    } else {
+      // Fast: breathing wave — storm → calm → rush
+      // Base ramp gets faster over time
+      // Multiplied by 0.82 to compensate for the 18% of spawns now going to
+      // planets/moons instead of asteroids — keeps overall challenge level intact
+      // Increased density further per testing feedback. Math confirmed hard mode's
+    // spawn RATE was already higher than medium's, but fast-falling objects spend
+    // much less time on screen than medium's slower ones, so fewer were visible
+    // at any given moment despite spawning more often overall. Pushing density up
+    // further compensates for that shorter on-screen dwell time.
+    const baseInterval = (CFG.astInt - prog*52) * 0.425; // 15% spawn rate increase per feedback (0.50 -> 0.425)
+      // Wave oscillates every ~18 seconds (at 60fps, 18s = ~1080 frames)
+      // sin wave: +1 = calm, -1 = storm
+      const wave = Math.sin((elapsed / 18) * Math.PI);
+      // Wave adds ±22 frames to interval (calm=longer gap, storm=shorter)
+      const breathe = wave * 22;
+      // Extra intensity ramp in final 20% of game
+      const finalRush = prog > 0.8 ? (prog - 0.8) * 5 * -15 : 0;
+      interval = baseInterval + breathe + finalRush;
+    }
+
+    nextAst = Math.max(CFG.astIntMin, interval) + Math.random()*12-6;
+  }
+  } // close gameStarted gate
+
+  // ── COLLISIONS (fast only) ─────────────────────────────────────────
+  // TEMP DEBUG: collision detection disabled entirely to test whether it's
+// the actual cause of the pop-in/launch bug. If the bug disappears with this
+// commented out, that's definitive proof resolveAstCols() is the culprit.
+const DEBUG_DISABLE_COLLISIONS = false; // re-enabled - proven NOT the cause, real bug was bottom-to-top spawn offset
+if(speedMode==='fast' && !DEBUG_DISABLE_COLLISIONS) resolveAstCols();
+
+  // ── UPDATE ASTEROIDS ───────────────────────────────────────────────
+  if(inv>0) inv--;
+  for(let i=asteroids.length-1;i>=0;i--){
+    const a=asteroids[i];
+    const __dbgPrevX=a.x, __dbgPrevY=a.y; // TEMP DEBUG — capture pre-move position
+    a._age++; // reliable per-asteroid age, used by the collision-skip fix above
+    if(a.objType==='planet'){
+      // FIXED: was accumulating the sine offset every frame (a.x +=), which
+      // compounds into runaway drift over time — exactly what caused the
+      // "blinking in and out" flicker. Now correctly computes an absolute
+      // position that oscillates AROUND the fixed spawn point (baseX).
+      a.x = a.baseX + Math.sin(frame*a.zigFreq + a.zigOff) * a.zigAmp;
+      a.y += a.vy;
+      a.rot += a.rotSpd;
+    } else if(speedMode==='medium'){
+      // FIXED: absolute position around baseX instead of accumulating each frame
+      a.x = a.baseX + Math.sin(frame*.04+a.wobOff)*a.wobAmp;
+      a.y+=a.spd; a.rot+=a.rotSpd;
+    } else if(speedMode==='fast'){
+      // FIXED: gravity (+.02/frame) was applying unconditionally to EVERY
+      // asteroid regardless of direction. For bottom-to-top asteroids (vy
+      // starts negative/upward), this constantly pulled vy back toward zero
+      // and then positive -- exactly like real gravity decelerating something
+      // thrown upward and pulling it back down. That's the "trampoline" arc.
+      // Rising asteroids should keep rising consistently, not get fought by
+      // the same downward pull meant for falling ones.
+      if(!a.isRising) a.vy+=.02;
+      a.baseX+=a.vx; a.y+=a.vy; a.rot+=a.rotSpd;
+      if(a.spawnAge===undefined) a.spawnAge=0;
+      a.spawnAge++;
+      // FIXED: the real teleport-in bug. The wobble sine terms could add a large
+      // instantaneous offset on TOP of a fast-moving baseX, especially right as
+      // an asteroid crosses the screen edge -- so instead of a smooth approach,
+      // the combined position could jump deep into frame in a single step. This
+      // ramps the wobble contribution up gradually over the first 20 frames of
+      // an asteroid's life, so it eases in smoothly instead of potentially adding
+      // a big jump right when it should be entering the visible screen.
+      const wobRamp = Math.min(1, a.spawnAge/20);
+      a.x = a.baseX
+        + (Math.sin(frame*a.wobFreq + a.wobOff) * a.wobAmp
+        +  Math.sin(frame*(a.wobFreq*2.3) + a.wob2Off) * a.wob2Amp) * wobRamp;
+    } else {
+      a.y+=a.spd;
+    }
+    // Off-screen removal
+    const hasHorizontalRisk = speedMode==='fast' || a.objType==='planet';
+    const gone = hasHorizontalRisk
+      ?(a.y>H+a.r*2||a.y<-a.r*3||a.x<-a.r*3||a.x>W+a.r*3)
+      :(a.y>H+a.r*2);
+    if(gone){asteroids.splice(i,1);dodged++;sfxDodge();continue;}
+    // Ship hit
+    if(inv===0&&hitShip(a)){
+      if(speedMode==='slow'){
+        inv=CFG.iFrames; spawnParticles(a.x,a.y,'#00c853',10); asteroids.splice(i,1); continue;
+      }
+      // TEMP DEBUG: unlimited lives override for extended bug-hunting sessions
+if(typeof DEBUG_UNLIMITED_LIVES === 'undefined' || !DEBUG_UNLIMITED_LIVES){ lives--; }
+updLives(); inv=CFG.iFrames;
+      spawnParticles(a.x,a.y,a.blue?'#4488ff':'#ff6600',14); spawnExplosion(a.x,a.y,a.r>35);
+      sfxBang(); asteroids.splice(i,1);
+      announce(lives+' lives remaining');
+      if(lives<=0){spawnParticles(shipX,shipY,'#00e5ff',20);setTimeout(doLose,600);state='ending';return;}
+      continue;
+    }
+    debugCheckJump(a, __dbgPrevX, __dbgPrevY); // TEMP DEBUG — checks for suspicious position jumps
+    drawAst(a);
+  }
+
+  // ── PARTICLES ──────────────────────────────────────────────────────
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx;p.y+=p.vy;p.vx*=.94;p.vy*=.94;p.alpha-=1/p.life;p.life--;
+    if(p.life<=0){particles.splice(i,1);continue;}
+    ctx.globalAlpha=p.alpha;ctx.fillStyle=p.col;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,Math.PI*2);ctx.fill();
+  }
+  ctx.globalAlpha=1;
+
+  // Power-ups + shield + explosions
+  tickPowerUpSpawn();
+  updatePowerUps();
+  drawShield();
+  updateExplosions();
+  drawShip(shipX,shipY,inv>0);
+
+  if(timeLeft<=0){
+    spawnParticles(shipX,shipY,'#ffd700',25);
+    spawnParticles(shipX,shipY,'#00e5ff',20);
+    state='ending'; setTimeout(doWin,800);
+  }
+}
+
+// ── BUTTONS ───────────────────────────────────────────────────────────
+document.querySelectorAll('.spd-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.spd-img-wrap').forEach(x=>x.classList.remove('selected'));
+  document.querySelectorAll('.spd-btn').forEach(x=>x.classList.remove('selected'));
+  b.classList.add('selected');
+  if(b.closest('.spd-img-wrap')) b.closest('.spd-img-wrap').classList.add('selected');
+  speedMode=b.dataset.speed;
+}));
+document.querySelectorAll('.len-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.len-img-wrap').forEach(x=>x.classList.remove('selected'));
+  document.querySelectorAll('.len-btn').forEach(x=>x.classList.remove('selected'));
+  b.classList.add('selected');
+  if(b.closest('.len-img-wrap')) b.closest('.len-img-wrap').classList.add('selected');
+  gameDuration=parseInt(b.dataset.secs);
+}));
+function startGame(){
+  initAudio();
+  if(ctx_a&&ctx_a.state==='suspended') ctx_a.resume();
+  showScreen(null); state='playing';
+  initGame(); startEng(); lastTS=0; requestAnimationFrame(loop);
+}
+function goSettings(){
+  stopEng(); cancelAnimationFrame(animId);
+  state='start'; showScreen('screen-start');
+  shipX=W/2; shipY=H-140; lastTS=0; requestAnimationFrame(loop);
+}
+document.getElementById('btn-start').addEventListener('click',startGame);
+document.getElementById('btn-play-again-win').addEventListener('click',startGame);
+document.getElementById('btn-play-again-lose').addEventListener('click',startGame);
+document.getElementById('btn-settings-win').addEventListener('click',goSettings);
+document.getElementById('btn-settings-lose').addEventListener('click',goSettings);
+document.getElementById('btn-read-win').addEventListener('click',()=>{
+  alert('Coming soon: game rules & info about Adapted Comic Books!');
+});
+document.getElementById('btn-read-lose').addEventListener('click',()=>{
+  alert('Coming soon: game rules & info about Adapted Comic Books!');
+});
+// My Cards: prevent navigation to the not-yet-built page, show Coming Soon,
+// and still clear the new-card badge since they did acknowledge it
+['mycards-link-win','mycards-link-lose'].forEach(id=>{
+  const el=document.getElementById(id);
+  if(el) el.addEventListener('click', (e)=>{
+    e.preventDefault();
+    localStorage.removeItem(K_NEWCARD);
+    updateCardBadges();
+    alert('Coming soon: view your collected cards here!');
+  });
+});
+
+// ── BOOT ──────────────────────────────────────────────────────────────
+showScreen('screen-start');
+shipX=W/2; shipY=H-140;
+preloadAllImages();
+requestAnimationFrame(loop);
+try{ initNameField(); }catch(e){ console.error('Name field init failed:', e); }
+
+// ══════════════════════════════════════════════════════════════════════
+// CARD SYSTEM
+// ══════════════════════════════════════════════════════════════════════
+
+// ── CARD DATA ─────────────────────────────────────────────────────────
+const CARD_DATA = [
+  { id:'c1', name:'Common Asteroid', art:'&#9899;',   rarity:'common',   value:2 },
+  { id:'c2', name:'Basketball',      art:'&#127936;', rarity:'common',   value:3 },
+  { id:'c3', name:'Spinning Rock',   art:'&#128256;', rarity:'common',   value:2 },
+  { id:'c4', name:'The Dreamship',   art:'&#128640;', rarity:'uncommon', value:5 },
+  { id:'c5', name:'Blue Nebula',     art:'&#127752;', rarity:'uncommon', value:5 },
+  { id:'c6', name:'Alien Encounter', art:'&#128125;', rarity:'uncommon', value:6 },
+  { id:'c7', name:'The Blue Crystal',art:'&#128142;', rarity:'rare',     value:8 },
+  { id:'c8', name:'Dinosaur Skull',  art:'&#128128;', rarity:'rare',     value:7 },
+];
+const SPECIALTY_CARD = { id:'spec', name:'NEBULAD', art:'&#11088;', rarity:'gold', value:10 };
+
+// ── STORAGE KEYS ──────────────────────────────────────────────────────
+const K_COLL  = 'acb_i1_collection';
+const K_SPEC  = 'acb_i1_specialty';
+const K_STATS = 'acb_i1_stats';
+
+// ── HELPERS ───────────────────────────────────────────────────────────
+// ── PLAYER NAME SYSTEM ──────────────────────────────────────────────
+function containsBlocked(name){
+  const lower = name.toLowerCase().replace(/[^a-z0-9]/g,'');
+  return NAME_BLOCKLIST.some(word => lower.includes(word));
+}
+function getPlayerName(){
+  return localStorage.getItem(K_NAME) || '';
+}
+function setPlayerName(name){
+  localStorage.setItem(K_NAME, name);
+}
+function displayName(){
+  const n = getPlayerName();
+  return n && n.trim() ? n.trim().toUpperCase() : 'PLAYER 1';
+}
+function initNameField(){
+  const input = document.getElementById('player-name-input');
+  const display = document.getElementById('name-current-display');
+  const skipBtn = document.getElementById('name-skip-btn');
+  if(!input || !display || !skipBtn) { console.warn('Name field elements missing, skipping init'); return; }
+  const saved = getPlayerName();
+  if(saved){
+    input.value = saved;
+    display.textContent = "Playing as: " + displayName();
+  }
+  input.addEventListener('blur', ()=>{
+    let val = input.value.trim();
+    if(val.length === 0){
+      setPlayerName('');
+      display.textContent = '';
+      return;
+    }
+    if(containsBlocked(val)){
+      input.value = '';
+      setPlayerName('');
+      display.textContent = "That name isn't allowed — try another!";
+      return;
+    }
+    setPlayerName(val);
+    display.textContent = "Playing as: " + displayName();
+  });
+  skipBtn.addEventListener('click', ()=>{
+    input.value=''; setPlayerName('');
+    display.textContent = "Playing as: PLAYER 1";
+  });
+}
+
+function getColl(){ try{return JSON.parse(localStorage.getItem(K_COLL)||'{}');}catch(e){return{};} }
+function saveColl(c){ localStorage.setItem(K_COLL,JSON.stringify(c)); }
+function getCardStats(){ try{return JSON.parse(localStorage.getItem(K_STATS)||'{}');}catch(e){return{};} }
+function saveCardStats(s){ localStorage.setItem(K_STATS,JSON.stringify(s)); }
+function hasSpec(){ return localStorage.getItem(K_SPEC)==='true'; }
+function setSpec(){ localStorage.setItem(K_SPEC,'true'); }
+
+function collectedCount(){
+  return Object.values(getColl()).filter(Boolean).length;
+}
+function getUncollected(){
+  const c=getColl();
+  return CARD_DATA.filter(card=>!c[card.id]);
+}
+function todayStr(){ return new Date().toISOString().split('T')[0]; }
+
+// ── SHOW CARD NOTIFICATION ────────────────────────────────────────────
+let notifyTimer=null;
+const K_NEWCARD = 'dreamship_has_new_card';
+function updateCardBadges(){
+  const hasNew = localStorage.getItem(K_NEWCARD)==='1';
+  ['mycards-link-win','mycards-link-lose'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    let dot = el.querySelector('.new-card-dot');
+    if(hasNew){
+      if(!dot){
+        dot = document.createElement('span');
+        dot.className = 'new-card-dot';
+        dot.setAttribute('aria-label', 'New card available');
+        dot.setAttribute('role', 'status');
+        el.appendChild(dot);
+      }
+      // ACCESSIBILITY FIX: the dot itself was purely visual with no screen
+      // reader equivalent - a screen reader user would never know a new card
+      // had been earned. Updating the parent link's own label covers this
+      // even if the dot's role/aria-label isn't picked up consistently.
+      el.setAttribute('aria-label', 'My Cards - new card available');
+    } else if(dot){
+      dot.remove();
+      el.setAttribute('aria-label', 'My Cards');
+    }
+  });
+}
+function showCardNotify(card, sub){
+  localStorage.setItem(K_NEWCARD, '1'); // mark that an unseen card exists, for the My Cards badge dot
+  const el=document.getElementById('card-notify');
+  document.getElementById('cn-art').innerHTML=card.art;
+  document.getElementById('cn-name').textContent=card.name;
+  document.getElementById('cn-sub').textContent=sub||'Added to your collection!';
+  el.classList.add('show');
+  if(notifyTimer) clearTimeout(notifyTimer);
+  notifyTimer=setTimeout(()=>el.classList.remove('show'),4000);
+}
+
+// ── UPDATE STATS ON GAME COMPLETE ─────────────────────────────────────
+function recordGameComplete(mode, durationSecs){
+  const s=getCardStats();
+  s.games=(s.games||0)+1;
+  s.timeSecs=(s.timeSecs||0)+Math.round(durationSecs);
+  if(mode==='slow')  s.slowGames =(s.slowGames ||0)+1;
+  if(mode==='medium')s.medGames  =(s.medGames  ||0)+1;
+  if(mode==='fast')  s.fastGames =(s.fastGames ||0)+1;
+  // Streak
+  const today=todayStr();
+  if(s.lastPlayDate===today){
+    // same day — no change
+  } else if(s.lastPlayDate===getPrevDay(today)){
+    s.streak=(s.streak||0)+1;
+  } else {
+    s.streak=1;
+  }
+  s.lastPlayDate=today;
+  saveCardStats(s);
+}
+function getPrevDay(dateStr){
+  const d=new Date(dateStr); d.setDate(d.getDate()-1); return d.toISOString().split('T')[0];
+}
+
+// ── CARD DROP LOGIC ───────────────────────────────────────────────────
+function tryEarnCard(mode, durationSecs){
+  const uncollected = getUncollected();
+  if(uncollected.length===0 && hasSpec()) return; // full collection
+  const s=getCardStats();
+  const today=todayStr();
+  const now=Date.now();
+
+  // ── SLOW MODE: 1 card per day ───────────────────────────────────────
+  if(mode==='slow'){
+    if(uncollected.length===0){
+      // Try specialty
+      trySpecialtyDrop(mode, s);
+      return;
+    }
+    if(s.lastCardDate===today) return; // already earned today
+    const card=uncollected[Math.floor(Math.random()*uncollected.length)];
+    const c=getColl(); c[card.id]=true; saveColl(c);
+    s.lastCardDate=today; saveCardStats(s);
+    setTimeout(()=>showCardNotify(card,'Slow mode daily card earned!'),1200);
+    return;
+  }
+
+  // ── MEDIUM MODE: 1 card per day ─────────────────────────────────────
+  if(mode==='medium'){
+    if(uncollected.length===0){
+      trySpecialtyDrop(mode, s);
+      return;
+    }
+    if(s.lastCardDate===today) return;
+    const card=uncollected[Math.floor(Math.random()*uncollected.length)];
+    const c=getColl(); c[card.id]=true; saveColl(c);
+    s.lastCardDate=today; saveCardStats(s);
+    setTimeout(()=>showCardNotify(card,'Medium mode daily card earned!'),1200);
+    return;
+  }
+
+  // ── FAST MODE: up to 2 per session, 45-min cooldown ─────────────────
+  if(mode==='fast'){
+    const cooldown=45*60*1000; // 45 minutes
+    if(s.lastFastDrop && (now-s.lastFastDrop)<cooldown) {
+      // Still in cooldown — check specialty only
+      if(uncollected.length===0) trySpecialtyDrop(mode,s);
+      return;
+    }
+
+    if(uncollected.length===0){
+      trySpecialtyDrop(mode, s);
+      return;
+    }
+
+    // First card: 35% chance
+    if(Math.random()<0.35){
+      const card=uncollected[Math.floor(Math.random()*uncollected.length)];
+      const c=getColl(); c[card.id]=true; saveColl(c);
+      s.lastFastDrop=now; saveCardStats(s);
+      setTimeout(()=>showCardNotify(card,'Fast mode card earned!'),1200);
+
+      // Second card: 20% chance (only if at least 2 uncollected remain)
+      const uncollected2=getUncollected();
+      if(uncollected2.length>0 && Math.random()<0.20){
+        const card2=uncollected2[Math.floor(Math.random()*uncollected2.length)];
+        const c2=getColl(); c2[card2.id]=true; saveColl(c2);
+        saveCardStats(s);
+        setTimeout(()=>showCardNotify(card2,'Bonus card earned!'),3500);
+      }
+    } else if(uncollected.length===0){
+      trySpecialtyDrop(mode,s);
+    }
+  }
+}
+
+function trySpecialtyDrop(mode, s){
+  if(hasSpec()) return;
+  if(collectedCount()<8) return; // need all 8 first
+
+  const now=Date.now();
+  const today=todayStr();
+
+  if(mode==='slow'){
+    // Slow: specialty after 20 slow games + all 8 collected
+    if((s.slowGames||0)>=20){
+      if(s.lastCardDate!==today){ // daily cap still applies
+        setSpec();
+        s.lastCardDate=today; saveCardStats(s);
+        setTimeout(()=>showCardNotify(SPECIALTY_CARD,'LEGENDARY CARD UNLOCKED!'),1500);
+      }
+    }
+    return;
+  }
+  if(mode==='medium'){
+    if((s.medGames||0)>=15){
+      if(s.lastCardDate!==today){
+        setSpec();
+        s.lastCardDate=today; saveCardStats(s);
+        setTimeout(()=>showCardNotify(SPECIALTY_CARD,'LEGENDARY CARD UNLOCKED!'),1500);
+      }
+    }
+    return;
+  }
+  if(mode==='fast'){
+    // Fast: 25% drop chance
+    const cooldown=45*60*1000;
+    if(s.lastFastDrop && (now-s.lastFastDrop)<cooldown) return;
+    if(Math.random()<0.25){
+      setSpec();
+      s.lastFastDrop=now; saveCardStats(s);
+      setTimeout(()=>showCardNotify(SPECIALTY_CARD,'LEGENDARY CARD UNLOCKED!'),1500);
+    }
+  }
+}
+
+// ── CARD SYSTEM HOOKS ─────────────────────────────────────────────────
+// Track game start time — set when game starts
+let cardGameStartTime = 0;
+
+</script>
+</body>
+</html>
